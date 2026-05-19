@@ -1,0 +1,101 @@
+﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using System.Reflection;
+using UnityEngine;
+
+namespace TimeToBuild
+{
+    public static class TimeToBuildUtils
+    {
+        public static readonly string VariableDryMass = "dry_mass";
+        public static readonly string VariableWetMass = "wet_mass";
+        public static readonly string VariableDryCost = "dry_cost";
+        public static readonly string VariableWetCost = "wet_cost";
+        public static readonly string VariableNumBuilds = "num_builds";
+        public static readonly string VariableNumParts = "num_parts";
+
+        public struct BuildPart
+        {
+            public uint ID;
+            public bool ReuseFromInventory;
+            public double DryMass;
+            public double WetMass;
+            public double DryCost;
+            public double WetCost;
+            public int NumBuilds;
+        }
+
+        [KSPAddon(KSPAddon.Startup.Instantly, true)]
+        public class SceneTracker : MonoBehaviour
+        {
+            public static bool RevertedFromFlight;
+
+            private void OnSceneSwitch(GameEvents.FromToAction<GameScenes, GameScenes> data)
+            {
+                RevertedFromFlight = data.from == GameScenes.FLIGHT && data.to == GameScenes.EDITOR;
+            }
+
+            public void Awake()
+            {
+                DontDestroyOnLoad(this);
+
+                GameEvents.onGameSceneSwitchRequested.Add(OnSceneSwitch);
+            }
+        }
+
+        public static float GetFacilityLevel(SpaceCenterFacility facility)
+        {
+            return HighLogic.CurrentGame.Mode != Game.Modes.CAREER ? 1 : ScenarioUpgradeableFacilities.GetFacilityLevel(facility);
+        }
+
+        public static Dictionary<string, double> GetFacilityVariables(SpaceCenterFacility currentFacility)
+        {
+            var variables = new Dictionary<string, double>();
+
+            variables["facility_level"] = GetFacilityLevel(currentFacility);
+            variables["Administration_level"] = GetFacilityLevel(SpaceCenterFacility.Administration);
+            variables["AstronautComplex_level"] = GetFacilityLevel(SpaceCenterFacility.AstronautComplex);
+            variables["Launchpad_level"] = GetFacilityLevel(SpaceCenterFacility.LaunchPad);
+            variables["MissionControl_level"] = GetFacilityLevel(SpaceCenterFacility.MissionControl);
+            variables["ResearchAndDevelopment_level"] = GetFacilityLevel(SpaceCenterFacility.ResearchAndDevelopment);
+            variables["Runway_level"] = GetFacilityLevel(SpaceCenterFacility.Runway);
+            variables["TrackingStation_level"] = GetFacilityLevel(SpaceCenterFacility.TrackingStation);
+            variables["SpaceplaneHangar_level"] = GetFacilityLevel(SpaceCenterFacility.SpaceplaneHangar);
+            variables["VehicleAssemblyBuilding_level"] = GetFacilityLevel(SpaceCenterFacility.VehicleAssemblyBuilding);
+
+            return variables;
+        }
+
+        public static Dictionary<string, double> GetPartVariables(BuildPart buildPart)
+        {
+            var variables = new Dictionary<string, double>();
+
+            variables[VariableDryMass] = buildPart.DryMass;
+            variables[VariableWetMass] = buildPart.WetMass;
+            variables[VariableDryCost] = buildPart.DryCost;
+            variables[VariableWetCost] = buildPart.WetCost;
+            variables[VariableNumBuilds] = buildPart.NumBuilds;
+
+            return variables;
+        }
+
+        [SuppressMessage("ReSharper", "RedundantTypeSpecificationInDefaultExpression")]
+        public static T GetMember<T>(object obj, string memberName)
+        {
+            MemberInfo memberInfo = obj.GetType().GetMember(memberName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).FirstOrDefault();
+            if (!(memberInfo is null))
+            {
+                object member = memberInfo is FieldInfo ? ((FieldInfo)memberInfo).GetValue(obj) : ((PropertyInfo)memberInfo).GetValue(obj, null);
+                if (member is T) return (T)member;
+            }
+
+            return default;
+        }
+
+        public static TimeToBuildScenario GetScenarioModule()
+        {
+            return HighLogic.CurrentGame.scenarios.FirstOrDefault(s => s.moduleRef is TimeToBuildScenario)?.moduleRef as TimeToBuildScenario;
+        }
+    }
+}

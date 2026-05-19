@@ -1,0 +1,70 @@
+name: compile
+description: >
+  Compiles C# code using `msbuild` into a mod assembly.  
+  This action will install any dependent mods declared in the csproj file and restore NuGet packages.
+
+inputs:
+  build-configuration:
+    default: Release
+    description: The project configuration to build.  Defaults to `Release`.
+
+  ksp-zip-url:
+    default: https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip
+    description: >
+      A url for a zip file that contains the assemblies from the game to link against.  This should either be stripped 
+      so that it only contains public interfaces, or encrypted so that the libraries are not being redistributed unprotected.
+
+      Defaults to `https://github.com/KSPModdingLibs/KSPLibs/raw/main/KSP-1.12.5.zip` which contains stripped versions 
+      of the libraries and should be suitable for most users. It does not require a password.
+
+  ksp-zip-password:
+    description: >
+      If the ksp library zip is encrypted, this is the password.  It should be stored in your repository's secrets.
+
+  solution-file-path:
+    description: >
+      The path to the solution file to build.  Defaults to empty, which will invoke `msbuild` on the root directory of 
+      the repo and builds any `*.sln` file it finds there.
+
+runs:
+  using: composite
+  steps:
+
+    - name: dump contexts
+      shell: bash
+      if: runner.debug
+      run: |
+        echo "${{ toJson(env) }}"
+        echo "${{ toJson(github )}}"
+        echo "${{ toJson(job) }}"
+        echo "${{ toJson(steps) }}"
+        printenv
+
+    - name: Set KSP_ROOT
+      if: ${{ !env.KSP_ROOT }}
+      shell: bash
+      run: echo 'KSP_ROOT=${{ '/tmp/ksp' }}' >> "$GITHUB_ENV"
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 5.x
+
+    - name: Download KSP Libs
+      shell: bash
+      run: |
+        wget --quiet ${{ inputs.ksp-zip-url }} -O /tmp/ksp.zip
+        unzip -q -P "${{ inputs.ksp-zip-password }}" /tmp/ksp.zip -d "${{ env.KSP_ROOT }}"
+
+    - name: Restore Mod Solution
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: nuget restore ${{ inputs.solution-file-path }} ${{ runner.debug && '-v:detailed' }}
+
+    - name: Build Mod Solution
+      shell: bash
+      working-directory: ${{ github.workspace }}
+      run: |
+        msbuild -p:Configuration=${{ inputs.build-configuration }} \
+        -p:ManagedRelativePath=KSP_x64_Data/Managed ${{ inputs.solution-file-path }} \
+        ${{ runner.debug && '-v:detailed' }}

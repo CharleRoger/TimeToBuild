@@ -1,0 +1,36 @@
+name: publish-to-spacedock
+
+on:
+  workflow_dispatch:
+    inputs:
+      spacedock-username:
+        type: string
+      spacedock-password:
+        type: string
+      game-id:
+        type: number
+        default: 3102 # hardcoded to KSP1 gameid.  retrieve from https://spacedock.info/api/games
+      mod-id:
+        type: number
+
+env:
+  SPACEDOCK_USERNAME: ${{ inputs.spacedock-username || github.triggering_actor }}
+  SPACEDOCK_MOD_ID: ${{ inputs.mod-id || vars.SPACEDOCK_MOD_ID }}
+
+jobs:
+  publish-to-spacedock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: setup-inputs
+        uses: KSPModdingLibs/KSPBuildTools/.github/actions/mask-input@main
+        with:
+          input-name: spacedock-password
+          output-variable-name: SPACEDOCK_PASSWORD
+      
+      - name: publish
+        uses: KSPModdingLibs/KSPBuildTools/.github/actions/publish-to-spacedock@main
+        with:
+          spacedock-username: ${{ env.SPACEDOCK_USERNAME }}
+          spacedock-password: ${{ env.SPACEDOCK_PASSWORD }}
+          game-id: ${{ inputs.game-id }}
+          mod-id: ${{ env.SPACEDOCK_MOD_ID }}
