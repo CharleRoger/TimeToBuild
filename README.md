@@ -71,6 +71,7 @@ Facility upgrades unlock additional "team" slots. Multiple teams can be assigned
 ## Dependencies
 
 - [ScrapYard (2.2.99.1)](https://github.com/zer0Kerbal/ScrapYard)
+- [BackgroundResourceProcessing (0.3.0)](https://github.com/Phantomical/BackgroundResourceProcessing) (Not a hard dependency, but essentially required for expected simulation behaviour)
 
 ## Compatibility
 
