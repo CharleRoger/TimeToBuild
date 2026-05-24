@@ -38,13 +38,14 @@ Custom configurations can be described via a `TimeToBuildConfig` node with any n
 - `Title`, displayed in the build-time dialog in game.
 - Any number of `Facility`s in which to operate, e.g. on construction of a vessel in the VAB/SPH and/or rollout of the vessel onto the launchpad/runway: `Launchpad`, `Runway`, `VehicleAssemblyBuilding`, `SpaceplaneHangar`.
 - `WholeVessel = true` or `PerNewPart = true` and/or `PerReusedPart = true`, specifies whether the formula applies to the whole vessel or as a sum over new or recovered parts.
-- `Formula`:
+- `WorkFormula`, `RateFormula` and `OverheadFormula`:
   - Supports all the basic mathematical operations `+ - * / ^ ( )`.
   - The following variables are currently recognised:
     - Time units: `year`, `day` (of the home planet), `hour`, `minute`, `second`.
     - Facility levels: `facility_level` (current assembly/launch facility), `Administration_level`, `AstronautComplex_level`, `Launchpad_level`, `MissionControl_level`, `ResearchAndDevelopment_level`, `Runway_level`, `SpaceplaneHangar_level`, `TrackingStation_level`, `VehicleAssemblyBuilding_level`.
     - Whole-vessel properties: `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`, `num_parts`.
     - Individual part properties: `num_builds` (tracked by ScrapYard), `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`.
+  - Build time is computed as `Work / Rate + Overhead`.
 
 ### Planned features
 

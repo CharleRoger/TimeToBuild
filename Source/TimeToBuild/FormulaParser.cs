@@ -7,6 +7,8 @@ namespace TimeToBuild
     {
         public static double ParseAndComputeFormula(string formula, params Dictionary<string, double>[] variables)
         {
+            if (formula.Length == 0) return 0;
+
             int currentPosition = 0;
             double result = ParseExpression();
 

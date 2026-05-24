@@ -58,13 +58,6 @@ namespace TimeToBuild
             StartCoroutine(HandleButtons_Coroutine());
         }
 
-        private int ComputeBuildTime(string formula, params Dictionary<string, double>[] variables)
-        {
-            var time = Convert.ToInt32(Math.Ceiling(FormulaParser.ParseAndComputeFormula(formula, variables)));
-            if (time < 0) time = 0;
-            return time;
-        }
-
         protected Dictionary<BuildTime, int> ComputeBuildTimes(List<BuildPart> buildParts)
         {
             var buildTimes = new Dictionary<BuildTime, int>();
@@ -107,19 +100,19 @@ namespace TimeToBuild
                 {
                     foreach (var buildPart in buildParts)
                     {
-                        if (!buildPart.ReuseFromInventory) buildTimes[buildTime] += ComputeBuildTime(buildTime.Formula, globalVariables, partVariables[buildPart]);
+                        if (!buildPart.ReuseFromInventory) buildTimes[buildTime] += buildTime.ComputeBuildTime(globalVariables, partVariables[buildPart]);
                     }
                 }
                 if (buildTime.PerReusedPart)
                 {
                     foreach (var buildPart in buildParts)
                     {
-                        if (buildPart.ReuseFromInventory) buildTimes[buildTime] += ComputeBuildTime(buildTime.Formula, globalVariables, partVariables[buildPart]);
+                        if (buildPart.ReuseFromInventory) buildTimes[buildTime] += buildTime.ComputeBuildTime(globalVariables, partVariables[buildPart]);
                     }
                 }
                 if (buildTime.WholeVessel)
                 {
-                    buildTimes[buildTime] = ComputeBuildTime(buildTime.Formula, globalVariables, shipVariables);
+                    buildTimes[buildTime] = buildTime.ComputeBuildTime(globalVariables, shipVariables);
                 }
 
                 buildTimes[buildTime] = Calendar.RoundDuration(buildTimes[buildTime]);
