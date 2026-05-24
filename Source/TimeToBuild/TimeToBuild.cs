@@ -7,6 +7,7 @@ using Smooth.Collections;
 using static TimeToBuild.TimeToBuildProfile;
 using static TimeToBuild.TimeToBuildUtils;
 using KSP.UI.Screens;
+using static TimeToBuild.BuildTime;
 
 namespace TimeToBuild
 {
@@ -58,16 +59,24 @@ namespace TimeToBuild
             StartCoroutine(HandleButtons_Coroutine());
         }
 
-        protected Dictionary<BuildTime, int> ComputeBuildTimes(List<BuildPart> buildParts)
+        protected Dictionary<string, double> GetGlobalVariables()
         {
-            var buildTimes = new Dictionary<BuildTime, int>();
+            var globalVariables = Calendar.GetTimeUnitVariables();
 
             var usingFacilities = GetUsingFacilities();
-            if (usingFacilities.Count == 0) return buildTimes;
+            if (usingFacilities.Count > 0) globalVariables.AddAll(GetFacilityVariables(usingFacilities[0]));
 
-            var currentFacility = usingFacilities[0];
-            var globalVariables = GetFacilityVariables(currentFacility);
-            globalVariables.AddAll(Calendar.GetTimeUnitVariables());
+            return globalVariables;
+        }
+
+        protected Dictionary<BuildTime, BuildTime.BuildChunk> ComputeBuildChunks(List<BuildPart> buildParts)
+        {
+            var buildChunks = new Dictionary<BuildTime, BuildTime.BuildChunk>();
+
+            var usingFacilities = GetUsingFacilities();
+            if (usingFacilities.Count == 0) return buildChunks;
+
+            var globalVariables = GetGlobalVariables();
 
             var shipVariables = new Dictionary<string, double>
             {
@@ -90,35 +99,47 @@ namespace TimeToBuild
                 shipVariables[VariableWetCost] += variables[VariableWetCost];
             }
 
-            foreach (var buildTime in Profile.BuildTimes)
+            foreach (var buildTime in Profile.BuildTimes.Values)
             {
                 if (buildTime.Facilities.Intersect(usingFacilities).Count() == 0) continue;
 
-                buildTimes[buildTime] = 0;
+                var buildChunk = new BuildChunk();
+                buildChunk.Name = buildTime.Name;
+                buildChunk.Work = 0;
+                buildChunk.Overhead = 0;
 
                 if (buildTime.PerNewPart)
                 {
                     foreach (var buildPart in buildParts)
                     {
-                        if (!buildPart.ReuseFromInventory) buildTimes[buildTime] += buildTime.ComputeBuildTime(globalVariables, partVariables[buildPart]);
+                        if (!buildPart.ReuseFromInventory)
+                        {
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, partVariables[buildPart]);
+                        }                            
                     }
                 }
                 if (buildTime.PerReusedPart)
                 {
                     foreach (var buildPart in buildParts)
                     {
-                        if (buildPart.ReuseFromInventory) buildTimes[buildTime] += buildTime.ComputeBuildTime(globalVariables, partVariables[buildPart]);
+                        if (buildPart.ReuseFromInventory)
+                        {
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, partVariables[buildPart]);
+                        }
                     }
                 }
                 if (buildTime.WholeVessel)
                 {
-                    buildTimes[buildTime] = buildTime.ComputeBuildTime(globalVariables, shipVariables);
+                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, shipVariables);
+                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, shipVariables);
                 }
 
-                buildTimes[buildTime] = Calendar.RoundDuration(buildTimes[buildTime]);
+                buildChunks[buildTime] = buildChunk;
             }
 
-            return buildTimes;
+            return buildChunks;
         }
 
         protected List<BuildPart> GatherBuildParts(List<Part> parts)
@@ -328,22 +349,36 @@ namespace TimeToBuild
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
 
-            var buildTimes = ComputeBuildTimes(buildParts);
+            var buildTimeChunks = ComputeBuildChunks(buildParts);
+
+            var globalVariables = GetGlobalVariables();
 
             var title = "";
             var totalBuildTime = 0;
-            foreach (var buildTime in buildTimes)
+            foreach (var buildTimeBuildChunkPair in buildTimeChunks)
             {
-                if (buildTime.Value > 0)
+                var buildTimeConfig = buildTimeBuildChunkPair.Key;
+                var buildChunk = buildTimeBuildChunkPair.Value;
+
+                if (buildChunk.Work > 0)
                 {
-                    title += buildTime.Key.Title;
-                    totalBuildTime += buildTime.Value;
+                    title += buildTimeConfig.Title;
+
+                    if (!Profile.BuildTimes.ContainsKey(buildChunk.Name)) continue;
+
+                    var rate = FormulaParser.ParseAndComputeFormula(Profile.BuildTimes[buildChunk.Name].RateFormula, globalVariables);
+
+                    var buildTime = Convert.ToInt32(Math.Ceiling(buildChunk.Work / rate + buildChunk.Overhead));
+                    if (buildTime < 0) buildTime = 0;
+                    buildTime = Calendar.RoundDuration(buildTime);
+
+                    totalBuildTime += buildTime;
 
                     var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
                     var numReusedParts = buildParts.Count(buildPart => buildPart.ReuseFromInventory);
 
-                    var newPartsRelevant = buildTime.Key.PerNewPart && numNewParts > 0;
-                    var reusedPartsRelevant = buildTime.Key.PerReusedPart && numReusedParts > 0;
+                    var newPartsRelevant = buildTimeConfig.PerNewPart && numNewParts > 0;
+                    var reusedPartsRelevant = buildTimeConfig.PerReusedPart && numReusedParts > 0;
 
                     if (newPartsRelevant || reusedPartsRelevant)
                     {
@@ -354,7 +389,7 @@ namespace TimeToBuild
                         title += ")";
                     }
 
-                    title += "\n" + Calendar.GetDurationString(buildTime.Value) + "\n\n";
+                    title += "\n" + Calendar.GetDurationString(buildTime) + "\n\n";
                 }
             }
             title += LocalizerCache.Total + "\n" + Calendar.GetDurationString(totalBuildTime) + "\n\n";
