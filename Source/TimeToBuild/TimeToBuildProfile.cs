@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static TimeToBuild.BuildTime;
 
 namespace TimeToBuild
 {
@@ -10,7 +11,7 @@ namespace TimeToBuild
         public string Description { get; private set; } = "";
         public double MorningTime { get; private set; } = 0;
         public double AlarmWarningBufferTime { get; private set; } = 0;
-        public Dictionary<string, BuildTime> BuildTimes { get; private set; } = new Dictionary<string, BuildTime>();
+        public Dictionary<BuildTimeIdentifier, BuildTime> BuildTimes { get; private set; } = new Dictionary<BuildTimeIdentifier, BuildTime>();
 
         public TimeToBuildProfile(ConfigNode node)
         {
@@ -21,8 +22,17 @@ namespace TimeToBuild
             if (node.HasValue("AlarmWarningBufferTime")) MorningTime = double.Parse(node.GetValue("AlarmWarningBufferTime"));
             foreach (var buildTimeNode in node.GetNodes("BuildTime"))
             {
-                var buildTime = new BuildTime(buildTimeNode);
-                if (buildTime.Name != "") BuildTimes[buildTime.Name] = buildTime;
+                foreach (var facilityName in buildTimeNode.GetValues("Facility"))
+                {
+                    foreach (SpaceCenterFacility facility in Enum.GetValues(typeof(SpaceCenterFacility)))
+                    {
+                        if (facilityName.Replace(" ", "").Equals(facility.ToString(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            var buildTime = new BuildTime(buildTimeNode, facility);
+                            if (buildTime.Identifier.Name != "") BuildTimes[buildTime.Identifier] = buildTime;
+                        }
+                    }
+                }
             }
         }
 

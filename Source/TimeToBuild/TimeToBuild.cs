@@ -59,24 +59,12 @@ namespace TimeToBuild
             StartCoroutine(HandleButtons_Coroutine());
         }
 
-        protected Dictionary<string, double> GetGlobalVariables()
+        protected List<BuildChunk> ComputeBuildChunks(List<BuildPart> buildParts)
         {
-            var globalVariables = Calendar.GetTimeUnitVariables();
-
-            var usingFacilities = GetUsingFacilities();
-            if (usingFacilities.Count > 0) globalVariables.AddAll(GetFacilityVariables(usingFacilities[0]));
-
-            return globalVariables;
-        }
-
-        protected Dictionary<BuildTime, BuildTime.BuildChunk> ComputeBuildChunks(List<BuildPart> buildParts)
-        {
-            var buildChunks = new Dictionary<BuildTime, BuildTime.BuildChunk>();
+            var buildChunks = new List<BuildChunk>();
 
             var usingFacilities = GetUsingFacilities();
             if (usingFacilities.Count == 0) return buildChunks;
-
-            var globalVariables = GetGlobalVariables();
 
             var shipVariables = new Dictionary<string, double>
             {
@@ -99,14 +87,18 @@ namespace TimeToBuild
                 shipVariables[VariableWetCost] += variables[VariableWetCost];
             }
 
+            var timeUnitVariables = Calendar.GetTimeUnitVariables();
+
             foreach (var buildTime in Profile.BuildTimes.Values)
             {
-                if (buildTime.Facilities.Intersect(usingFacilities).Count() == 0) continue;
+                if (!usingFacilities.Contains(buildTime.Identifier.Facility)) continue;
 
-                var buildChunk = new BuildChunk();
-                buildChunk.Name = buildTime.Name;
+                var buildChunk = new BuildChunk(buildTime.Identifier);
                 buildChunk.Work = 0;
                 buildChunk.Overhead = 0;
+
+                var facilityVariables = GetFacilityVariables();
+                facilityVariables["facility_level"] = GetFacilityLevel(buildTime.Identifier.Facility);
 
                 if (buildTime.PerNewPart)
                 {
@@ -114,9 +106,9 @@ namespace TimeToBuild
                     {
                         if (!buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, partVariables[buildPart]);
-                        }                            
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                        }
                     }
                 }
                 if (buildTime.PerReusedPart)
@@ -125,18 +117,18 @@ namespace TimeToBuild
                     {
                         if (buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, partVariables[buildPart]);
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                         }
                     }
                 }
                 if (buildTime.WholeVessel)
                 {
-                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, globalVariables, shipVariables);
-                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, globalVariables, shipVariables);
+                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, shipVariables);
+                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, shipVariables);
                 }
 
-                buildChunks[buildTime] = buildChunk;
+                if (buildChunk.Work > 0 || buildChunk.Overhead > 0) buildChunks.Add(buildChunk);
             }
 
             return buildChunks;
@@ -250,11 +242,23 @@ namespace TimeToBuild
             LaunchTime = -1;
         }
 
-        protected DialogGUIButton GetBuildDialogButton(string optionText, double date = -1, Callback callback = null)
+        protected DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null, double date = -1)
         {
             if (date > 0) optionText += "\n" + Calendar.GetDateString(date);
 
             return new DialogGUIButton(optionText, callback, 300, 40, true);
+        }
+
+        protected void SpawnMultiOptionDialog(string title, string message, params DialogGUIBase[] optionButtons)
+        {
+            var optionClose = GetBuildDialogButton(LocalizerCache.Close);
+
+            var allOptionButtons = optionButtons.ToList();
+            allOptionButtons.Add(optionClose);
+
+            var dialog = new MultiOptionDialog("TimeToBuildDialog", message, title, HighLogic.UISkin, allOptionButtons.ToArray());
+
+            PopupDialog.SpawnPopupDialog(dialog, false, HighLogic.UISkin);
         }
     }
 
@@ -349,24 +353,23 @@ namespace TimeToBuild
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
 
-            var buildTimeChunks = ComputeBuildChunks(buildParts);
-
-            var globalVariables = GetGlobalVariables();
+            var buildChunks = ComputeBuildChunks(buildParts);
 
             var title = "";
             var totalBuildTime = 0;
-            foreach (var buildTimeBuildChunkPair in buildTimeChunks)
+            foreach (var buildChunk in buildChunks)
             {
-                var buildTimeConfig = buildTimeBuildChunkPair.Key;
-                var buildChunk = buildTimeBuildChunkPair.Value;
+                var buildTimeConfig = Profile.BuildTimes[buildChunk.Identifier];
 
                 if (buildChunk.Work > 0)
                 {
                     title += buildTimeConfig.Title;
 
-                    if (!Profile.BuildTimes.ContainsKey(buildChunk.Name)) continue;
+                    if (!Profile.BuildTimes.ContainsKey(buildChunk.Identifier)) continue;
 
-                    var rate = FormulaParser.ParseAndComputeFormula(Profile.BuildTimes[buildChunk.Name].RateFormula, globalVariables);
+                    var buildRates = GetBuildRates(Calendar, Profile.BuildTimes.Values);
+
+                    var rate = buildRates[buildChunk.Identifier];
 
                     var buildTime = Convert.ToInt32(Math.Ceiling(buildChunk.Work / rate + buildChunk.Overhead));
                     if (buildTime < 0) buildTime = 0;
@@ -400,13 +403,10 @@ namespace TimeToBuild
             var message = "";
             foreach (var date in GetSalientDates()) message += Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
-            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, LaunchTimeEarliest, OnWarpToEarliestLaunch);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchTimeNextMorning, OnWarpToLaunchNextMorning);
-            var optionClose = GetBuildDialogButton(LocalizerCache.Close);
+            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnWarpToEarliestLaunch, LaunchTimeEarliest);
+            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnWarpToLaunchNextMorning, LaunchTimeNextMorning);
 
-            var multiOptionDialog = new MultiOptionDialog("TimeToBuildDialog", message, title, HighLogic.UISkin, optionWarpToEarliestLaunch, optionWarpToNextMorning, optionClose);
-
-            PopupDialog.SpawnPopupDialog(multiOptionDialog, false, HighLogic.UISkin);
+            SpawnMultiOptionDialog(title, message, optionWarpToEarliestLaunch, optionWarpToNextMorning);
         }
     }
 

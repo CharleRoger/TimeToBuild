@@ -1,10 +1,7 @@
-﻿using Smooth.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using static TimeToBuild.BuildTime;
 
 namespace TimeToBuild
 {
@@ -51,11 +48,10 @@ namespace TimeToBuild
             return HighLogic.CurrentGame.Mode != Game.Modes.CAREER ? 1 : ScenarioUpgradeableFacilities.GetFacilityLevel(facility);
         }
 
-        public static Dictionary<string, double> GetFacilityVariables(SpaceCenterFacility currentFacility)
+        public static Dictionary<string, double> GetFacilityVariables()
         {
             var variables = new Dictionary<string, double>();
 
-            variables["facility_level"] = GetFacilityLevel(currentFacility);
             variables["Administration_level"] = GetFacilityLevel(SpaceCenterFacility.Administration);
             variables["AstronautComplex_level"] = GetFacilityLevel(SpaceCenterFacility.AstronautComplex);
             variables["Launchpad_level"] = GetFacilityLevel(SpaceCenterFacility.LaunchPad);
@@ -67,6 +63,25 @@ namespace TimeToBuild
             variables["VehicleAssemblyBuilding_level"] = GetFacilityLevel(SpaceCenterFacility.VehicleAssemblyBuilding);
 
             return variables;
+        }
+
+        public static Dictionary<BuildTime.BuildTimeIdentifier, double> GetBuildRates(Calendar calendar, IEnumerable<BuildTime> buildTimes)
+        {
+            var buildRates = new Dictionary<BuildTime.BuildTimeIdentifier, double>();
+
+            var timeUnitVariables = calendar.GetTimeUnitVariables();
+            var facilityVariables = GetFacilityVariables();
+
+            foreach (var buildTime in buildTimes)
+            {
+                var facility = buildTime.Identifier.Facility;
+
+                var facilityVariable = new Dictionary<string, double>();
+                facilityVariable["facility_level"] = GetFacilityLevel(buildTime.Identifier.Facility);
+                buildRates[buildTime.Identifier] = FormulaParser.ParseAndComputeFormula(buildTime.RateFormula, timeUnitVariables, facilityVariables, facilityVariable);
+            }
+
+            return buildRates;
         }
 
         public static Dictionary<string, double> GetPartVariables(BuildPart buildPart)
@@ -82,13 +97,12 @@ namespace TimeToBuild
             return variables;
         }
 
-        [SuppressMessage("ReSharper", "RedundantTypeSpecificationInDefaultExpression")]
         public static T GetMember<T>(object obj, string memberName)
         {
-            MemberInfo memberInfo = obj.GetType().GetMember(memberName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).FirstOrDefault();
+            var memberInfo = obj.GetType().GetMember(memberName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy).FirstOrDefault();
             if (!(memberInfo is null))
             {
-                object member = memberInfo is FieldInfo ? ((FieldInfo)memberInfo).GetValue(obj) : ((PropertyInfo)memberInfo).GetValue(obj, null);
+                var member = memberInfo is FieldInfo ? ((FieldInfo)memberInfo).GetValue(obj) : ((PropertyInfo)memberInfo).GetValue(obj, null);
                 if (member is T) return (T)member;
             }
 
