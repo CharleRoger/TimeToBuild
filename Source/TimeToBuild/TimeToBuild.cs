@@ -3,11 +3,9 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Smooth.Collections;
 using static TimeToBuild.TimeToBuildProfile;
 using static TimeToBuild.TimeToBuildUtils;
 using KSP.UI.Screens;
-using static TimeToBuild.BuildTime;
 
 namespace TimeToBuild
 {
@@ -108,7 +106,7 @@ namespace TimeToBuild
                         {
                             buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                             buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
-                        }
+                        }                            
                     }
                 }
                 if (buildTime.PerReusedPart)
@@ -220,21 +218,52 @@ namespace TimeToBuild
             return salientDates.OrderBy(p => p.Item1);
         }
 
-        protected void OpenBuildDialog()
+        private bool TryStartBuild(List<BuildChunk> buildChunks, bool actuallyAddIt)
         {
-            SpawnBuildDialog();
+            var success = true;
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                var buildVessel = new BuildVessel(EditorLogic.fetch.ship, EditorLogic.fetch.launchSiteName, Scenario.EditorStartTime, buildChunks);
+
+                if (EditorDriver.editorFacility == EditorFacility.VAB) success = Scenario.BuildFacilityVAB.TryAddBuildVessel(buildVessel, actuallyAddIt);
+                if (EditorDriver.editorFacility == EditorFacility.SPH) success = Scenario.BuildFacilitySPH.TryAddBuildVessel(buildVessel, actuallyAddIt);
+
+                if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.FacilityBusy);
+            }
+
+            return success;
+        }
+
+        protected void OnStartBuild()
+        {
+            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var buildChunks = ComputeBuildChunks(buildParts);
+
+            TryStartBuild(buildChunks, true);
         }
 
         protected void OnWarpToEarliestLaunch()
         {
-            LaunchTime = LaunchTimeEarliest;
-            TryLaunchVessel();
+            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var buildChunks = ComputeBuildChunks(buildParts);
+
+            if (TryStartBuild(buildChunks, false))
+            {
+                LaunchTime = LaunchTimeEarliest;
+                TryLaunchVessel();
+            }
         }
 
         protected void OnWarpToLaunchNextMorning()
         {
-            LaunchTime = LaunchTimeNextMorning;
-            TryLaunchVessel();
+            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var buildChunks = ComputeBuildChunks(buildParts);
+
+            if (TryStartBuild(buildChunks, false))
+            {
+                LaunchTime = LaunchTimeNextMorning;
+                TryLaunchVessel();
+            }
         }
 
         protected void CloseBuildDialog()
@@ -334,7 +363,7 @@ namespace TimeToBuild
         protected override void HandleButtons()
         {
             EditorLogic.fetch.launchBtn.onClick.RemoveAllListeners();
-            EditorLogic.fetch.launchBtn.onClick.AddListener(() => OpenBuildDialog());
+            EditorLogic.fetch.launchBtn.onClick.AddListener(() => SpawnBuildDialog());
 
             EditorLogic.fetch.exitBtn.onClick.AddListener(() => Reset());
 
@@ -403,10 +432,11 @@ namespace TimeToBuild
             var message = "";
             foreach (var date in GetSalientDates()) message += Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
+            var optionStartConstruction = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
             var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnWarpToEarliestLaunch, LaunchTimeEarliest);
             var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnWarpToLaunchNextMorning, LaunchTimeNextMorning);
 
-            SpawnMultiOptionDialog(title, message, optionWarpToEarliestLaunch, optionWarpToNextMorning);
+            SpawnMultiOptionDialog(title, message, optionStartConstruction, optionWarpToEarliestLaunch, optionWarpToNextMorning);
         }
     }
 
