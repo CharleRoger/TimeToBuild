@@ -8,18 +8,14 @@ namespace TimeToBuild
     public class LaunchScheduler
     {
         public Calendar Calendar { get; private set; }
-        public TimeToBuildProfile Profile { get; private set; }
-        public TimeToBuildScenario Scenario { get; private set; }
         public double LaunchTime { get; private set; } = -1;
         public double LaunchTimeEarliest { get; private set; } = -1;
         public double LaunchTimeNextMorning { get; private set; } = -1;
         public bool LaunchScheduled => LaunchTime > 0;
 
-        public LaunchScheduler(TimeToBuildProfile profile, CelestialBody homeWorld)
+        public LaunchScheduler(Calendar calendar)
         {
-            Calendar = new Calendar(homeWorld);
-            Profile = profile;
-            Scenario = GetScenarioModule();
+            Calendar = calendar;
         }
 
         public Dictionary<BuildTime.BuildTimeIdentifier, double> GetBuildRates()
@@ -29,7 +25,7 @@ namespace TimeToBuild
             var timeUnitVariables = Calendar.GetTimeUnitVariables();
             var facilityVariables = GetFacilityVariables();
 
-            foreach (var buildTime in Profile.BuildTimes)
+            foreach (var buildTime in TimeToBuild.Instance.Profile.BuildTimes)
             {
                 var facility = buildTime.Key.Facility;
 
@@ -46,7 +42,7 @@ namespace TimeToBuild
         {
             var salientDates = new List<Tuple<double, string>>
             {
-                new Tuple<double, string>(Scenario.EditorStartTime, LocalizerCache.CurrentTime),
+                new Tuple<double, string>(TimeToBuild.Instance.Scenario.EditorStartTime, LocalizerCache.CurrentTime),
                 new Tuple<double, string>(LaunchTimeEarliest, LocalizerCache.LaunchTimeEarliest),
                 new Tuple<double, string>(LaunchTimeNextMorning, LocalizerCache.LaunchTimeNextMorning)
             };
@@ -55,7 +51,7 @@ namespace TimeToBuild
             {
                 foreach (var alarm in AlarmClockScenario.Instance.alarms.Values)
                 {
-                    if (alarm.ut < LaunchTimeNextMorning + Profile.AlarmWarningBufferTime)
+                    if (alarm.ut < LaunchTimeNextMorning + TimeToBuild.Instance.Profile.AlarmWarningBufferTime)
                     {
                         var alarmMessage = alarm.title;
                         if (alarm.vesselName != null && alarm.vesselName != "") alarmMessage += " (" + alarm.vesselName + ")";
@@ -68,7 +64,7 @@ namespace TimeToBuild
             {
                 foreach (var contract in Contracts.ContractSystem.Instance.GetCurrentActiveContracts<Contracts.Contract>())
                 {
-                    if (contract.TimeDeadline < LaunchTimeNextMorning + Profile.AlarmWarningBufferTime)
+                    if (contract.TimeDeadline < LaunchTimeNextMorning + TimeToBuild.Instance.Profile.AlarmWarningBufferTime)
                     {
                         var contractMessage = contract.Title;
                         salientDates.Add(new Tuple<double, string>(contract.TimeDeadline, contractMessage));
@@ -94,6 +90,12 @@ namespace TimeToBuild
             LaunchTime = -1;
         }
 
+        public void ResetTime()
+        {
+            HighLogic.CurrentGame.flightState.universalTime = TimeToBuild.Instance.Scenario.EditorStartTime;
+            UnsetLaunchTime();
+        }
+
         public void WarpToLaunchTime()
         {
             HighLogic.CurrentGame.flightState.universalTime = LaunchTime;
@@ -102,8 +104,8 @@ namespace TimeToBuild
 
         public void SetBuildTime(double buildTime)
         {
-            LaunchTimeEarliest = Scenario.EditorStartTime + buildTime;
-            LaunchTimeNextMorning = Math.Ceiling((LaunchTimeEarliest - Profile.MorningTime) / Calendar.Day) * Calendar.Day + Profile.MorningTime;
+            LaunchTimeEarliest = TimeToBuild.Instance.Scenario.EditorStartTime + buildTime;
+            LaunchTimeNextMorning = Math.Ceiling((LaunchTimeEarliest - TimeToBuild.Instance.Profile.MorningTime) / Calendar.Day) * Calendar.Day + TimeToBuild.Instance.Profile.MorningTime;
         }
     }
 }

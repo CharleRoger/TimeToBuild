@@ -4,16 +4,22 @@
     public class TimeToBuildScenario : ScenarioModule
     {
         public double EditorStartTime = -1;
-        public BuildFacility BuildFacilityVAB { get; private set; } = new BuildFacility();
-        public BuildFacility BuildFacilitySPH { get; private set; } = new BuildFacility();
+        public BuildFacility BuildFacilityVAB { get; private set; }
+        public BuildFacility BuildFacilitySPH { get; private set; }
 
         public override void OnLoad(ConfigNode node)
         {
             base.OnLoad(node);
 
+            BuildFacilityVAB = new BuildFacility(SpaceCenterFacility.VehicleAssemblyBuilding);
             if (node.HasValue("EditorStartTime")) EditorStartTime = double.Parse(node.GetValue("EditorStartTime"));
-            if (node.HasNode("BuildFacilityVAB")) BuildFacilityVAB = new BuildFacility(node.GetNode("BuildFacilityVAB"));
-            if (node.HasNode("BuildFacilitySPH")) BuildFacilitySPH = new BuildFacility(node.GetNode("BuildFacilitySPH"));
+
+            BuildFacilitySPH = new BuildFacility(SpaceCenterFacility.SpaceplaneHangar);
+            if (node.HasNode("BuildFacilityVAB")) BuildFacilityVAB.Load(node.GetNode("BuildFacilityVAB"));
+            StartCoroutine(BuildFacilityVAB.UpdateBuildVessels_Coroutine());
+
+            if (node.HasNode("BuildFacilitySPH")) BuildFacilitySPH.Load(node.GetNode("BuildFacilitySPH"));
+            StartCoroutine(BuildFacilitySPH.UpdateBuildVessels_Coroutine());
         }
 
         public override void OnSave(ConfigNode node)
@@ -21,8 +27,14 @@
             base.OnSave(node);
 
             node.AddValue("EditorStartTime", EditorStartTime);
-            node.AddNode("BuildFacilityVAB", BuildFacilityVAB.GetConfigNode());
-            node.AddNode("BuildFacilitySPH", BuildFacilitySPH.GetConfigNode());
+
+            var buildFacilityVABNode = new ConfigNode();
+            BuildFacilityVAB.Save(buildFacilityVABNode);
+            node.AddNode("BuildFacilityVAB", buildFacilityVABNode);
+
+            var buildFacilitySPHNode = new ConfigNode();
+            BuildFacilitySPH.Save(buildFacilitySPHNode);
+            node.AddNode("BuildFacilitySPH", buildFacilitySPHNode);
         }
     }
 }

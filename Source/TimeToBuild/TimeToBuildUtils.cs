@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -14,6 +13,9 @@ namespace TimeToBuild
         public static readonly string VariableWetCost = "wet_cost";
         public static readonly string VariableNumBuilds = "num_builds";
         public static readonly string VariableNumParts = "num_parts";
+
+        public static bool ScrapYardUseTracker => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseTracker;
+        public static bool ScrapYardUseInventory => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseInventory;
 
         public struct BuildPart
         {
@@ -89,11 +91,6 @@ namespace TimeToBuild
             }
 
             return default;
-        }
-
-        public static TimeToBuildScenario GetScenarioModule()
-        {
-            return HighLogic.CurrentGame.scenarios.FirstOrDefault(s => s.moduleRef is TimeToBuildScenario)?.moduleRef as TimeToBuildScenario;
         }
 
         public static DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null)
