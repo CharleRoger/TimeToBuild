@@ -24,6 +24,8 @@ namespace TimeToBuild
         public static readonly string StartBuild = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Button_StartBuild");
         public static readonly string CannotStartBuild = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Message_CannotStartBuild");
         public static readonly string FacilityBusy = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Message_FacilityBusy");
+        public static readonly string BuildComplete = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Message_BuildComplete");
+        public static readonly string ReadyToLaunch = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Message_ReadyToLaunch");
         public static readonly string WarpToEarliestLaunch = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Button_WarpToEarliestLaunch");
         public static readonly string WarpToNextMorning = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Button_WarpToNextMorning");
         public static readonly string Close = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Button_Close");

@@ -53,28 +53,14 @@ namespace TimeToBuild
             {
                 var buildRates = GetBuildRates(Calendar, Profile.BuildTimes.Values);
 
-                foreach (var buildVessel in Scenario.BuildFacilityVAB.BuildVessels)
+                for (int vesselIndex = 0; vesselIndex < Scenario.BuildFacilityVAB.BuildVessels.Count; vesselIndex++)
                 {
-                    bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
-
-                    if (buildComplete)
-                    {
-                        Scenario.BuildFacilityVAB.BuildVessels.Remove(buildVessel);
-
-                        break;
-                    }
+                    Scenario.BuildFacilityVAB.UpdateWorkDoneOnBuildVessel(vesselIndex, buildRates);
                 }
 
-                foreach (var buildVessel in Scenario.BuildFacilitySPH.BuildVessels)
+                for (int vesselIndex = 0; vesselIndex < Scenario.BuildFacilitySPH.BuildVessels.Count; vesselIndex++)
                 {
-                    bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
-
-                    if (buildComplete)
-                    {
-                        Scenario.BuildFacilitySPH.BuildVessels.Remove(buildVessel);
-
-                        break;
-                    }
+                    Scenario.BuildFacilitySPH.UpdateWorkDoneOnBuildVessel(vesselIndex, buildRates);
                 }
 
                 yield return new WaitForFixedUpdate();
@@ -308,25 +294,6 @@ namespace TimeToBuild
         {
             LaunchTime = -1;
         }
-
-        protected DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null, double date = -1)
-        {
-            if (date > 0) optionText += "\n" + Calendar.GetDateString(date);
-
-            return new DialogGUIButton(optionText, callback, 300, 40, true);
-        }
-
-        protected void SpawnMultiOptionDialog(string title, string message, params DialogGUIBase[] optionButtons)
-        {
-            var optionClose = GetBuildDialogButton(LocalizerCache.Close);
-
-            var allOptionButtons = optionButtons.ToList();
-            allOptionButtons.Add(optionClose);
-
-            var dialog = new MultiOptionDialog("TimeToBuildDialog", message, title, HighLogic.UISkin, allOptionButtons.ToArray());
-
-            PopupDialog.SpawnPopupDialog(dialog, false, HighLogic.UISkin);
-        }
     }
 
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
@@ -469,10 +436,10 @@ namespace TimeToBuild
 
             var message = "";
             foreach (var date in GetSalientDates()) message += Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
-
+            
             var optionStartConstruction = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
-            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnWarpToEarliestLaunch, LaunchTimeEarliest);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnWarpToLaunchNextMorning, LaunchTimeNextMorning);
+            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch + "\n" + Calendar.GetDateString(LaunchTimeEarliest), OnWarpToEarliestLaunch);
+            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning + "\n" + Calendar.GetDateString(LaunchTimeNextMorning), OnWarpToLaunchNextMorning);
 
             SpawnMultiOptionDialog(title, message, optionStartConstruction, optionWarpToEarliestLaunch, optionWarpToNextMorning);
         }

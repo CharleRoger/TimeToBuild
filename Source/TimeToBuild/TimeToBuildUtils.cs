@@ -113,5 +113,22 @@ namespace TimeToBuild
         {
             return HighLogic.CurrentGame.scenarios.FirstOrDefault(s => s.moduleRef is TimeToBuildScenario)?.moduleRef as TimeToBuildScenario;
         }
+
+        public static DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null)
+        {
+            return new DialogGUIButton(optionText, callback, 300, 40, true);
+        }
+
+        public static void SpawnMultiOptionDialog(string title, string message, params DialogGUIBase[] optionButtons)
+        {
+            var optionClose = GetBuildDialogButton(LocalizerCache.Close);
+
+            var allOptionButtons = optionButtons.ToList();
+            allOptionButtons.Add(optionClose);
+
+            var dialog = new MultiOptionDialog("TimeToBuildDialog", message, title, HighLogic.UISkin, allOptionButtons.ToArray());
+
+            PopupDialog.SpawnPopupDialog(dialog, false, HighLogic.UISkin);
+        }
     }
 }

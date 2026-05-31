@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static TimeToBuild.TimeToBuildUtils;
 
 namespace TimeToBuild
 {
@@ -6,6 +7,8 @@ namespace TimeToBuild
     {
         [Persistent]
         public List<BuildVessel> BuildVessels { get; private set; } = new List<BuildVessel>();
+
+        private BuildVessel VesselToLaunch = null;
 
         public BuildFacility()
         {
@@ -39,6 +42,24 @@ namespace TimeToBuild
             if (actuallyAddIt) BuildVessels.Add(buildVessel);
 
             return true;
+        }
+
+        public void UpdateWorkDoneOnBuildVessel(int vesselIndex, Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)
+        {
+            var buildVessel = BuildVessels[vesselIndex];
+
+            bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
+
+            if (buildComplete)
+            {
+                VesselToLaunch = BuildVessels[vesselIndex];
+
+                BuildVessels.RemoveAt(vesselIndex);
+
+                TimeWarp.SetRate(0, true);
+
+                SpawnMultiOptionDialog(LocalizerCache.BuildComplete, buildVessel.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch);
+            }
         }
     }
 }
