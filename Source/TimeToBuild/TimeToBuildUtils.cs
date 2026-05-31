@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -63,25 +64,6 @@ namespace TimeToBuild
             variables["VehicleAssemblyBuilding_level"] = GetFacilityLevel(SpaceCenterFacility.VehicleAssemblyBuilding);
 
             return variables;
-        }
-
-        public static Dictionary<BuildTime.BuildTimeIdentifier, double> GetBuildRates(Calendar calendar, IEnumerable<BuildTime> buildTimes)
-        {
-            var buildRates = new Dictionary<BuildTime.BuildTimeIdentifier, double>();
-
-            var timeUnitVariables = calendar.GetTimeUnitVariables();
-            var facilityVariables = GetFacilityVariables();
-
-            foreach (var buildTime in buildTimes)
-            {
-                var facility = buildTime.Identifier.Facility;
-
-                var facilityVariable = new Dictionary<string, double>();
-                facilityVariable["facility_level"] = GetFacilityLevel(buildTime.Identifier.Facility);
-                buildRates[buildTime.Identifier] = FormulaParser.ParseAndComputeFormula(buildTime.RateFormula, timeUnitVariables, facilityVariables, facilityVariable);
-            }
-
-            return buildRates;
         }
 
         public static Dictionary<string, double> GetPartVariables(BuildPart buildPart)

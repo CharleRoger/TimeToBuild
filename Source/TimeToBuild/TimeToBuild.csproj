@@ -36,6 +36,7 @@
     <Compile Include="BuildTime.cs" />
     <Compile Include="BuildVessel.cs" />
     <Compile Include="FormulaParser.cs" />
+    <Compile Include="LaunchScheduler.cs" />
     <Compile Include="LocalizerCache.cs" />
     <Compile Include="TimeToBuildScenario.cs" />
     <Compile Include="TimeToBuildUtils.cs" />

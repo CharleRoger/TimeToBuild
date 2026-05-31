@@ -15,10 +15,7 @@ namespace TimeToBuild
 
         protected TimeToBuildScenario Scenario { get; private set; }
 
-        protected Calendar Calendar { get; private set; }
-        protected double LaunchTime = -1;
-        protected double LaunchTimeEarliest = -1;
-        protected double LaunchTimeNextMorning = -1;
+        protected LaunchScheduler LaunchScheduler { get; private set; }
 
         protected bool ScrapYardUseTracker => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseTracker;
         protected bool ScrapYardUseInventory => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseInventory;
@@ -29,11 +26,11 @@ namespace TimeToBuild
         protected abstract void SpawnBuildDialog();
         protected abstract void TryLaunchVessel();
 
-        private IEnumerator InitialiseCalendar_Coroutine()
+        private IEnumerator InitialiseLaunchScheduler_Coroutine()
         {
-            while (SpaceCenter.Instance.cb is null) yield return new WaitForFixedUpdate();
+            while (Profile is null || SpaceCenter.Instance.cb is null) yield return new WaitForFixedUpdate();
 
-            Calendar = new Calendar(SpaceCenter.Instance.cb);
+            LaunchScheduler = new LaunchScheduler(Profile, SpaceCenter.Instance.cb);
         }
 
         private IEnumerator HandleButtons_Coroutine()
@@ -47,11 +44,11 @@ namespace TimeToBuild
 
         private IEnumerator UpdateBuildVessels_Coroutine()
         {
-            while (Profile is null || Calendar is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
+            while (LaunchScheduler is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
 
             while (true)
             {
-                var buildRates = GetBuildRates(Calendar, Profile.BuildTimes.Values);
+                var buildRates = LaunchScheduler.GetBuildRates();
 
                 for (int vesselIndex = 0; vesselIndex < Scenario.BuildFacilityVAB.BuildVessels.Count; vesselIndex++)
                 {
@@ -74,7 +71,7 @@ namespace TimeToBuild
 
             Scenario = GetScenarioModule();
 
-            StartCoroutine(InitialiseCalendar_Coroutine());
+            StartCoroutine(InitialiseLaunchScheduler_Coroutine());
 
             StartCoroutine(HandleButtons_Coroutine());
 
@@ -109,7 +106,7 @@ namespace TimeToBuild
                 shipVariables[VariableWetCost] += variables[VariableWetCost];
             }
 
-            var timeUnitVariables = Calendar.GetTimeUnitVariables();
+            var timeUnitVariables = LaunchScheduler.Calendar.GetTimeUnitVariables();
 
             foreach (var buildTime in Profile.BuildTimes.Values)
             {
@@ -204,44 +201,6 @@ namespace TimeToBuild
             return buildParts;
         }
 
-        // List of tuples instead of dictionary in case of duplicate times or names
-        protected IOrderedEnumerable<Tuple<double, string>> GetSalientDates()
-        {
-            var salientDates = new List<Tuple<double, string>>
-            {
-                new Tuple<double, string>(Scenario.EditorStartTime, LocalizerCache.CurrentTime),
-                new Tuple<double, string>(LaunchTimeEarliest, LocalizerCache.LaunchTimeEarliest),
-                new Tuple<double, string>(LaunchTimeNextMorning, LocalizerCache.LaunchTimeNextMorning)
-            };
-
-            if (!(AlarmClockScenario.Instance is null))
-            {
-                foreach (var alarm in AlarmClockScenario.Instance.alarms.Values)
-                {
-                    if (alarm.ut < LaunchTimeNextMorning + Profile.AlarmWarningBufferTime)
-                    {
-                        var alarmMessage = alarm.title;
-                        if (alarm.vesselName != null && alarm.vesselName != "") alarmMessage += " (" + alarm.vesselName + ")";
-                        salientDates.Add(new Tuple<double, string>(alarm.ut, alarmMessage));
-                    }
-                }
-            }
-
-            if (!(Contracts.ContractSystem.Instance is null))
-            {
-                foreach (var contract in Contracts.ContractSystem.Instance.GetCurrentActiveContracts<Contracts.Contract>())
-                {
-                    if (contract.TimeDeadline < LaunchTimeNextMorning + Profile.AlarmWarningBufferTime)
-                    {
-                        var contractMessage = contract.Title;
-                        salientDates.Add(new Tuple<double, string>(contract.TimeDeadline, contractMessage));
-                    }
-                }
-            }
-
-            return salientDates.OrderBy(p => p.Item1);
-        }
-
         private bool TryStartBuild(List<BuildChunk> buildChunks, bool actuallyAddIt)
         {
             var success = true;
@@ -266,33 +225,33 @@ namespace TimeToBuild
             TryStartBuild(buildChunks, true);
         }
 
-        protected void OnWarpToEarliestLaunch()
+        protected void OnTryLaunchEarliest()
         {
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var buildChunks = ComputeBuildChunks(buildParts);
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchTime = LaunchTimeEarliest;
+                LaunchScheduler.SetLaunchTimeToEarliest();
                 TryLaunchVessel();
             }
         }
 
-        protected void OnWarpToLaunchNextMorning()
+        protected void OnTryLaunchNextMorning()
         {
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var buildChunks = ComputeBuildChunks(buildParts);
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchTime = LaunchTimeNextMorning;
+                LaunchScheduler.SetLaunchTimeToNextMorning();
                 TryLaunchVessel();
             }
         }
 
         protected void CloseBuildDialog()
         {
-            LaunchTime = -1;
+            LaunchScheduler.UnsetLaunchTime();
         }
     }
 
@@ -302,20 +261,14 @@ namespace TimeToBuild
         protected void Reset()
         {
             HighLogic.CurrentGame.flightState.universalTime = Scenario.EditorStartTime;
-            LaunchTime = -1;
-        }
-
-        protected void WarpToLaunchTime()
-        {
-            HighLogic.CurrentGame.flightState.universalTime = LaunchTime;
-            LaunchTime = -1;
+            LaunchScheduler.UnsetLaunchTime();
         }
 
         protected void OnSave(ConfigNode node)
         {
-            if (LaunchTime < 0) return;
+            if (!LaunchScheduler.LaunchScheduled) return;
 
-            WarpToLaunchTime();
+            LaunchScheduler.WarpToLaunchTime();
 
             if (!ScrapYardUseInventory) return;
 
@@ -401,13 +354,13 @@ namespace TimeToBuild
 
                     if (!Profile.BuildTimes.ContainsKey(buildChunk.Identifier)) continue;
 
-                    var buildRates = GetBuildRates(Calendar, Profile.BuildTimes.Values);
+                    var buildRates = LaunchScheduler.GetBuildRates();
 
                     var rate = buildRates[buildChunk.Identifier];
 
                     var buildTime = Convert.ToInt32(Math.Ceiling(buildChunk.Work / rate + buildChunk.Overhead));
                     if (buildTime < 0) buildTime = 0;
-                    buildTime = Calendar.RoundDuration(buildTime);
+                    buildTime = LaunchScheduler.Calendar.RoundDuration(buildTime);
 
                     totalBuildTime += buildTime;
 
@@ -426,20 +379,19 @@ namespace TimeToBuild
                         title += ")";
                     }
 
-                    title += "\n" + Calendar.GetDurationString(buildTime) + "\n\n";
+                    title += "\n" + LaunchScheduler.Calendar.GetDurationString(buildTime) + "\n\n";
                 }
             }
-            title += LocalizerCache.Total + "\n" + Calendar.GetDurationString(totalBuildTime) + "\n\n";
+            title += LocalizerCache.Total + "\n" + LaunchScheduler.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
-            LaunchTimeEarliest = Scenario.EditorStartTime + totalBuildTime;
-            LaunchTimeNextMorning = Math.Ceiling((LaunchTimeEarliest - Profile.MorningTime) / Calendar.Day) * Calendar.Day + Profile.MorningTime;
+            LaunchScheduler.SetBuildTime(totalBuildTime);
 
             var message = "";
-            foreach (var date in GetSalientDates()) message += Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            foreach (var date in LaunchScheduler.GetSalientDates()) message += LaunchScheduler.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
             
             var optionStartConstruction = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
-            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch + "\n" + Calendar.GetDateString(LaunchTimeEarliest), OnWarpToEarliestLaunch);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning + "\n" + Calendar.GetDateString(LaunchTimeNextMorning), OnWarpToLaunchNextMorning);
+            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch + "\n" + LaunchScheduler.Calendar.GetDateString(LaunchScheduler.LaunchTimeEarliest), OnTryLaunchEarliest);
+            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning + "\n" + LaunchScheduler.Calendar.GetDateString(LaunchScheduler.LaunchTimeNextMorning), OnTryLaunchNextMorning);
 
             SpawnMultiOptionDialog(title, message, optionStartConstruction, optionWarpToEarliestLaunch, optionWarpToNextMorning);
         }
