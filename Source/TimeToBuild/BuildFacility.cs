@@ -58,8 +58,17 @@ namespace TimeToBuild
 
                 TimeWarp.SetRate(0, true);
 
-                SpawnMultiOptionDialog(LocalizerCache.BuildComplete, buildVessel.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch);
+                var optionLaunchNow = GetBuildDialogButton(LocalizerCache.LaunchNow, LaunchVessel);
+                SpawnMultiOptionDialog(LocalizerCache.BuildComplete, buildVessel.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow);
             }
+        }
+
+        private void LaunchVessel()
+        {
+            var tempFile = KSPUtil.ApplicationRootPath + "saves/" + HighLogic.SaveFolder + "/Ships/temp.craft";
+            VesselToLaunch.ShipConstruct.SaveShip().Save(tempFile);
+
+            FlightDriver.StartWithNewLaunch(tempFile, VesselToLaunch.ShipConstruct.missionFlag, VesselToLaunch.LaunchSiteName, new VesselCrewManifest());
         }
     }
 }
