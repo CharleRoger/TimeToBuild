@@ -45,6 +45,42 @@ namespace TimeToBuild
             }
         }
 
+        private IEnumerator UpdateBuildVessels_Coroutine()
+        {
+            while (Profile is null || Calendar is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
+
+            while (true)
+            {
+                var buildRates = GetBuildRates(Calendar, Profile.BuildTimes.Values);
+
+                foreach (var buildVessel in Scenario.BuildFacilityVAB.BuildVessels)
+                {
+                    bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
+
+                    if (buildComplete)
+                    {
+                        Scenario.BuildFacilityVAB.BuildVessels.Remove(buildVessel);
+
+                        break;
+                    }
+                }
+
+                foreach (var buildVessel in Scenario.BuildFacilitySPH.BuildVessels)
+                {
+                    bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
+
+                    if (buildComplete)
+                    {
+                        Scenario.BuildFacilitySPH.BuildVessels.Remove(buildVessel);
+
+                        break;
+                    }
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+        }
+
         protected void Start()
         {
             var settings = HighLogic.CurrentGame.Parameters.CustomParams<TimeToBuildSettings>();
@@ -55,6 +91,8 @@ namespace TimeToBuild
             StartCoroutine(InitialiseCalendar_Coroutine());
 
             StartCoroutine(HandleButtons_Coroutine());
+
+            StartCoroutine(UpdateBuildVessels_Coroutine());
         }
 
         protected List<BuildChunk> ComputeBuildChunks(List<BuildPart> buildParts)
