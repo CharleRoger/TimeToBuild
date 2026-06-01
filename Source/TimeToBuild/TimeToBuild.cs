@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,7 +21,7 @@ namespace TimeToBuild
         protected abstract List<SpaceCenterFacility> GetUsingFacilities();
         protected abstract bool ButtonsAreActive();
         protected abstract void HandleButtons();
-        protected abstract void SpawnBuildDialog();
+        protected abstract void OnLaunchButtonClicked();
 
         private IEnumerator InitialiseLaunchScheduler_Coroutine()
         {
@@ -58,10 +57,17 @@ namespace TimeToBuild
 
         protected void CloseBuildDialog()
         {
-            LaunchScheduler.UnsetLaunchTime();
+            LaunchScheduler.UnscheduleLaunch();
+        }
+
+        protected void OnSave(ConfigNode node)
+        {
+            // Bit of a hack, but trying to warp any earlier won't work
+
+            if (LaunchScheduler.LaunchScheduled) LaunchScheduler.WarpToLaunchTime();
         }
     }
-
+    
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class TimeToBuildEditor : TimeToBuild
     {
@@ -69,7 +75,7 @@ namespace TimeToBuild
         {
             if (!LaunchScheduler.LaunchScheduled) return;
 
-            LaunchScheduler.WarpToLaunchTime();
+            base.OnSave(node);
 
             if (!ScrapYardUseInventory) return;
 
@@ -86,7 +92,7 @@ namespace TimeToBuild
 
             if (Scenario.EditorStartTime > 0 && SceneTracker.RevertedFromFlight) LaunchScheduler.ResetTime();
 
-            Scenario.EditorStartTime = HighLogic.CurrentGame.flightState.universalTime;
+            Scenario.EditorStartTime = CurrentTime;
 
             GameEvents.onGameStateSave.Add(OnSave);
         }
@@ -127,7 +133,7 @@ namespace TimeToBuild
         protected override void HandleButtons()
         {
             EditorLogic.fetch.launchBtn.onClick.RemoveAllListeners();
-            EditorLogic.fetch.launchBtn.onClick.AddListener(() => SpawnBuildDialog());
+            EditorLogic.fetch.launchBtn.onClick.AddListener(() => OnLaunchButtonClicked());
 
             EditorLogic.fetch.exitBtn.onClick.AddListener(() => OnEditorExit());
 
@@ -135,7 +141,7 @@ namespace TimeToBuild
             launchSiteSelector.SetActive(false);
         }
 
-        protected override void SpawnBuildDialog()
+        protected override void OnLaunchButtonClicked()
         {
             LaunchScheduler.ResetTime();
 
@@ -144,62 +150,7 @@ namespace TimeToBuild
             if (EditorDriver.editorFacility == EditorFacility.SPH) buildFacility = Scenario.BuildFacilitySPH;
             if (buildFacility is null) return;
 
-            var buildParts = BuildFacility.GatherBuildParts(EditorLogic.fetch.ship.parts);
-
-            var buildChunks = buildFacility.ComputeBuildChunks(buildParts);
-
-            var title = "";
-            var totalBuildTime = 0;
-            foreach (var buildChunk in buildChunks)
-            {
-                var buildTimeConfig = Profile.BuildTimes[buildChunk.Identifier];
-
-                if (buildChunk.Work > 0)
-                {
-                    title += buildTimeConfig.Title;
-
-                    if (!Profile.BuildTimes.ContainsKey(buildChunk.Identifier)) continue;
-
-                    var buildRates = LaunchScheduler.GetBuildRates();
-
-                    var rate = buildRates[buildChunk.Identifier];
-
-                    var buildTime = Convert.ToInt32(Math.Ceiling(buildChunk.Work / rate + buildChunk.Overhead));
-                    if (buildTime < 0) buildTime = 0;
-                    buildTime = LaunchScheduler.Calendar.RoundDuration(buildTime);
-
-                    totalBuildTime += buildTime;
-
-                    var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
-                    var numReusedParts = buildParts.Count(buildPart => buildPart.ReuseFromInventory);
-
-                    var newPartsRelevant = buildTimeConfig.PerNewPart && numNewParts > 0;
-                    var reusedPartsRelevant = buildTimeConfig.PerReusedPart && numReusedParts > 0;
-
-                    if (newPartsRelevant || reusedPartsRelevant)
-                    {
-                        title += " (";
-                        if (newPartsRelevant) title += numNewParts.ToString() + " " + (numNewParts > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
-                        if (newPartsRelevant && reusedPartsRelevant) title += ", ";
-                        if (reusedPartsRelevant) title += numReusedParts.ToString() + " " + (numReusedParts > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
-                        title += ")";
-                    }
-
-                    title += "\n" + LaunchScheduler.Calendar.GetDurationString(buildTime) + "\n\n";
-                }
-            }
-            title += LocalizerCache.Total + "\n" + LaunchScheduler.Calendar.GetDurationString(totalBuildTime) + "\n\n";
-
-            LaunchScheduler.SetBuildTime(totalBuildTime);
-
-            var message = "";
-            foreach (var date in LaunchScheduler.GetSalientDates()) message += LaunchScheduler.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
-            
-            var optionStartConstruction = GetBuildDialogButton(LocalizerCache.StartBuild, buildFacility.OnStartBuild);
-            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch + "\n" + LaunchScheduler.Calendar.GetDateString(LaunchScheduler.LaunchTimeEarliest), buildFacility.OnTryLaunchEarliest);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning + "\n" + LaunchScheduler.Calendar.GetDateString(LaunchScheduler.LaunchTimeNextMorning), buildFacility.OnTryLaunchNextMorning);
-
-            SpawnMultiOptionDialog(title, message, optionStartConstruction, optionWarpToEarliestLaunch, optionWarpToNextMorning);
+            buildFacility.SpawnBuildDialog();
         }
     }
 
@@ -243,9 +194,14 @@ namespace TimeToBuild
             launchSiteSelector.SetActive(false);
         }
 
-        protected override void SpawnBuildDialog()
+        protected override void OnLaunchButtonClicked()
         {
             // Not used yet
+        }
+
+        protected void OnSave(ConfigNode node)
+        {
+            base.OnSave(node);
         }
     }
 }

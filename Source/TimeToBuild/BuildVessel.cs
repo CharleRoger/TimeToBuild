@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using static TimeToBuild.TimeToBuildUtils;
 
 namespace TimeToBuild
 {
@@ -63,7 +64,7 @@ namespace TimeToBuild
         {
             if (HighLogic.LoadedSceneIsEditor) return false;
 
-            var currentTime = Planetarium.GetUniversalTime();
+            var currentTime = CurrentTime;
 
             var totalWorkDoneByLastUpdate = WorkDone;
             WorkDone = 0;

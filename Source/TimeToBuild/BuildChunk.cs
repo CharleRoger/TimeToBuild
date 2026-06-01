@@ -72,5 +72,13 @@ namespace TimeToBuild
 
             return node;
         }
+
+        public struct BuildChunkDatum
+        {
+            public string Title;
+            public int Duration;
+            public int NewPartCount;
+            public int ReusedPartCount;
+        }
     }
 }

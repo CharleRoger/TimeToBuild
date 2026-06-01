@@ -9,8 +9,8 @@ namespace TimeToBuild
     {
         public Calendar Calendar { get; private set; }
         public double LaunchTime { get; private set; } = -1;
-        public double LaunchTimeEarliest { get; private set; } = -1;
-        public double LaunchTimeNextMorning { get; private set; } = -1;
+        public double LaunchTimeEarliest = -1;
+        public double LaunchTimeNextMorning => Math.Ceiling((LaunchTimeEarliest - TimeToBuild.Instance.Profile.MorningTime) / Calendar.Day) * Calendar.Day + TimeToBuild.Instance.Profile.MorningTime;
         public bool LaunchScheduled => LaunchTime > 0;
 
         public LaunchScheduler(Calendar calendar)
@@ -75,17 +75,22 @@ namespace TimeToBuild
             return salientDates.OrderBy(p => p.Item1);
         }
 
-        public void SetLaunchTimeToEarliest()
+        public void ScheduleLaunchNow()
+        {
+            LaunchTime = CurrentTime;
+        }
+
+        public void ScheduleLaunchEarliest()
         {
             LaunchTime = LaunchTimeEarliest;
         }
 
-        public void SetLaunchTimeToNextMorning()
+        public void ScheduleLaunchNextMorning()
         {
             LaunchTime = LaunchTimeNextMorning;
         }
 
-        public void UnsetLaunchTime()
+        public void UnscheduleLaunch()
         {
             LaunchTime = -1;
         }
@@ -93,19 +98,13 @@ namespace TimeToBuild
         public void ResetTime()
         {
             HighLogic.CurrentGame.flightState.universalTime = TimeToBuild.Instance.Scenario.EditorStartTime;
-            UnsetLaunchTime();
+            UnscheduleLaunch();
         }
 
         public void WarpToLaunchTime()
         {
             HighLogic.CurrentGame.flightState.universalTime = LaunchTime;
-            UnsetLaunchTime();
-        }
-
-        public void SetBuildTime(double buildTime)
-        {
-            LaunchTimeEarliest = TimeToBuild.Instance.Scenario.EditorStartTime + buildTime;
-            LaunchTimeNextMorning = Math.Ceiling((LaunchTimeEarliest - TimeToBuild.Instance.Profile.MorningTime) / Calendar.Day) * Calendar.Day + TimeToBuild.Instance.Profile.MorningTime;
+            UnscheduleLaunch();
         }
     }
 }

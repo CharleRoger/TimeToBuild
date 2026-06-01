@@ -17,6 +17,8 @@ namespace TimeToBuild
         public static bool ScrapYardUseTracker => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseTracker;
         public static bool ScrapYardUseInventory => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseInventory;
 
+        public static double CurrentTime => HighLogic.LoadedSceneHasPlanetarium && !(Planetarium.fetch is null) ? Planetarium.GetUniversalTime() : HighLogic.CurrentGame.flightState.universalTime;
+
         public struct BuildPart
         {
             public uint ID;
@@ -93,8 +95,9 @@ namespace TimeToBuild
             return default;
         }
 
-        public static DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null)
+        public static DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null, double date = -1)
         {
+            if (date > 0) optionText += "\n" + TimeToBuild.Instance.LaunchScheduler.Calendar.GetDateString(date);
             return new DialogGUIButton(optionText, callback, 300, 40, true);
         }
 
