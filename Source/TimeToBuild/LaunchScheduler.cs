@@ -75,19 +75,11 @@ namespace TimeToBuild
             return salientDates.OrderBy(p => p.Item1);
         }
 
-        public void ScheduleLaunchNow()
+        public void ScheduleLaunch(double launchTime, string vesselName)
         {
-            LaunchTime = CurrentTime;
-        }
+            UnscheduleLaunch();
 
-        public void ScheduleLaunchEarliest()
-        {
-            LaunchTime = LaunchTimeEarliest;
-        }
-
-        public void ScheduleLaunchNextMorning()
-        {
-            LaunchTime = LaunchTimeNextMorning;
+            LaunchTime = launchTime;
         }
 
         public void UnscheduleLaunch()

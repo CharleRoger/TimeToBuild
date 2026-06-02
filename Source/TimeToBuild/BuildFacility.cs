@@ -236,11 +236,11 @@ namespace TimeToBuild
             var message = "";
             foreach (var date in LaunchScheduler.GetSalientDates()) message += LaunchScheduler.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
-            var optionStartConstruction = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
+            var optionStartBuild = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
             var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest);
             var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnEditorLaunchNextMorning, LaunchScheduler.LaunchTimeNextMorning);
 
-            SpawnMultiOptionDialog(title, message, optionStartConstruction, optionWarpToEarliestLaunch, optionWarpToNextMorning);
+            SpawnMultiOptionDialog(title, message, optionStartBuild, optionWarpToEarliestLaunch, optionWarpToNextMorning);
         }
 
         public void SpawnLaunchDialog()
@@ -290,24 +290,26 @@ namespace TimeToBuild
 
         private void LaunchBuildVessel()
         {
-            if (!LaunchScheduler.LaunchScheduled) return;
+            if (!LaunchScheduler.LaunchScheduled || BuildVesselToLaunch is null) return;
 
             var tempFile = KSPUtil.ApplicationRootPath + "saves/" + HighLogic.SaveFolder + "/Ships/temp.craft";
             BuildVesselToLaunch.ShipConstruct.SaveShip().Save(tempFile);
 
             FlightDriver.StartWithNewLaunch(tempFile, BuildVesselToLaunch.ShipConstruct.missionFlag, BuildVesselToLaunch.LaunchSiteName, new VesselCrewManifest());
+
+            BuildVesselToLaunch = null;
         }
 
         private void LaunchBuildVesselNow()
         {
-            LaunchScheduler.ScheduleLaunchNow();
+            LaunchScheduler.ScheduleLaunch(CurrentTime, BuildVesselToLaunch.ShipConstruct.shipName);
 
             LaunchBuildVessel();
         }
 
         private void LaunchBuildVesselNextMorning()
         {
-            LaunchScheduler.ScheduleLaunchNextMorning();
+            LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, BuildVesselToLaunch.ShipConstruct.shipName);
 
             LaunchBuildVessel();
         }
@@ -341,7 +343,15 @@ namespace TimeToBuild
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var buildChunks = ComputeBuildChunks(buildParts);
 
-            TryStartBuild(buildChunks, true);
+            if (TryStartBuild(buildChunks, true))
+            {
+                var alarm = new AlarmTypeRaw();
+                alarm.ut = LaunchScheduler.LaunchTimeEarliest;
+                alarm.title = EditorLogic.fetch.ship.shipName + " " + LocalizerCache.BuildCompleteTitle;
+                alarm.description = EditorLogic.fetch.ship.shipName + " " + LocalizerCache.BuildCompleteDescription;
+
+                AlarmClockScenario.Instance.alarms.Add((uint)new System.Random().Next(), alarm);
+            }
         }
 
         private void EditorLaunchVessel()
@@ -363,7 +373,7 @@ namespace TimeToBuild
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchScheduler.ScheduleLaunchEarliest();
+                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeEarliest, BuildVesselToLaunch.ShipConstruct.shipName);
                 EditorLaunchVessel();
             }
         }
@@ -377,7 +387,7 @@ namespace TimeToBuild
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchScheduler.ScheduleLaunchNextMorning();
+                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, BuildVesselToLaunch.ShipConstruct.shipName);
                 EditorLaunchVessel();
             }
         }

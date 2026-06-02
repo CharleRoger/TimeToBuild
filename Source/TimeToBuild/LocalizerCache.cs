@@ -15,6 +15,8 @@ namespace TimeToBuild
         public static readonly string Year = Localizer.Format("#LOC_TimeToBuild_TimeUnit_Year");
         public static readonly string Years = Localizer.Format("#LOC_TimeToBuild_TimeUnit_Years");
         public static readonly string NewPart = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Info_NewPart");
+        public static readonly string BuildCompleteTitle = Localizer.Format("#LOC_TimeToBuild_Alarm_BuildComplete_title");
+        public static readonly string BuildCompleteDescription = Localizer.Format("#LOC_TimeToBuild_Alarm_BuildComplete_description");
         public static readonly string NewParts = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Info_NewParts");
         public static readonly string ReusedPart = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Info_ReusedPart");
         public static readonly string ReusedParts = Localizer.Format("#LOC_TimeToBuild_BuildDialog_Info_ReusedParts");
