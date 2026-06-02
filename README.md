@@ -10,11 +10,15 @@ This mod is designed to provide a lightweight, flexible framework to implement b
 
 #### Core functionality
 
-When launching a vessel from the editor, you are prompted with a popup dialog:
+When launching a vessel from the editor, a dialog pops up:
 
 - Lists a breakdown of time required to ready the vessel for launch.
 - Current date, completion date, intermediate alarms and contract deadlines are also shown.
 - "Warp to earliest launch" or "Warp to next morning" to immediately time warp and seamlessly launch as normal.
+- "Start build" to begin constructing the vessel in the background.
+  - Currently, each of the VAB and SPH can only construct one vessel at a time.
+  - An alarm is added at the estimated completion date.
+  - Upon completion, another dialog pops up wherever you are with a button to launch to vessel.
 
 Reverting to the VAB or SPH reverts back to before the construction of the vessel.
 
@@ -49,11 +53,15 @@ Custom configurations can be described via a `TimeToBuildConfig` node with any n
 
 ### Planned features
 
+#### Core functionality
+
+- The vessel launch popup dialog on build completion additionally features a "warp to launch next morning" button like the editor build dialog.
+- Tech tree unlocks can also be configured to take time with a custom formula.
+  - Individual tech tree nodes can be configured to override the global formula.
+
 #### Vessel storage
 
-The vessel construction popup additionally offers a "Start construction" button which does not time warp or rollout yet.
-- An alarm is added at the completion date.
-- When completed, the vessel is added to storage.
+Vessels built in the background are added to storage upon completion rather than being rolled out for launch.
 - Each of the VAB and SPH can store a limited number of completed vessels, subject to facility level.
 
 The launchpad and runway now display stored vessels rather than all vessel designs.
