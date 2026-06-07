@@ -22,7 +22,7 @@ When launching a vessel from the editor, a dialog pops up:
 
 Reverting to the VAB or SPH reverts back to before the construction of the vessel.
 
-The ability to launch from the launchpad and runway facilities, as well as the launch site selector in those facilities and the editor, are currently disabled. These are planned to take on new functionality in the future (see planned features below).
+The ability to launch from the launchpad and runway facilities is currently disabled. These facilities are planned to take on new functionality in the future (see planned features below).
 
 #### Configuration
 
