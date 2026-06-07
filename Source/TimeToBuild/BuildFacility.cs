@@ -373,7 +373,7 @@ namespace TimeToBuild
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeEarliest, BuildVesselToLaunch.ShipConstruct.shipName);
+                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeEarliest, EditorLogic.fetch.ship.shipName);
                 EditorLaunchVessel();
             }
         }
@@ -387,7 +387,7 @@ namespace TimeToBuild
 
             if (TryStartBuild(buildChunks, false))
             {
-                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, BuildVesselToLaunch.ShipConstruct.shipName);
+                LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, EditorLogic.fetch.ship.shipName);
                 EditorLaunchVessel();
             }
         }
