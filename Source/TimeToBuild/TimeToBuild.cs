@@ -138,7 +138,10 @@ namespace TimeToBuild
             EditorLogic.fetch.exitBtn.onClick.AddListener(() => OnEditorExit());
 
             var launchSiteSelector = GetMember<GameObject>(EditorLogic.fetch, "launchSiteSelector");
-            launchSiteSelector.SetActive(false);
+            foreach (var button in launchSiteSelector.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                button.interactable = false;
+            }
         }
 
         protected override void OnLaunchButtonClicked()
@@ -187,11 +190,14 @@ namespace TimeToBuild
 
         protected override void HandleButtons()
         {
-            var button = GetMember<UnityEngine.UI.Button>(VesselSpawnDialog.Instance, "buttonLaunch");
-            if (!(button is null)) button.interactable = false;
+            var launchButton = GetMember<UnityEngine.UI.Button>(VesselSpawnDialog.Instance, "buttonLaunch");
+            if (!(launchButton is null)) launchButton.interactable = false;
 
             var launchSiteSelector = GetMember<GameObject>(VesselSpawnDialog.Instance, "launchSiteSelector");
-            launchSiteSelector.SetActive(false);
+            foreach (var button in launchSiteSelector.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            {
+                button.interactable = false;
+            }
         }
 
         protected override void OnLaunchButtonClicked()

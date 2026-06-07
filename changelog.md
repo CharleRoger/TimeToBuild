@@ -1,5 +1,6 @@
 # 0.2.1
 - Fixed "Warp to earliest launch" and "Warp to next morning" buttons
+- Re-enabled editor and launchpad/runway launch site selector (note that launching from the launchpad/runway is still disabled)
 # 0.2.0
 - Split `BuildTime` `Formula` into `WorkFormula`, `RateFormula` and `OverheadFormula`, where the total time is computed as `Work / Rate + Overhead`.
 - Added "Start build" option to editor build dialog:
