@@ -33,17 +33,20 @@ The default configuration defines three periods of time to take a vessel from pa
 - **Refurbishment**: Represents time taken to refurbish recovered and reused parts, currently set to one sixth of the assembly time.
 - **Rollout**: Represents time taken to physically move the vessel to the launch facility and prepare it for launch. This is dependent on the wet mass of the vessel at launch.
 
-Custom configurations can be described via a `TimeToBuildConfig` node with any number of `BuildTime` nodes as well as the following fields:
+Custom configurations can be described via a `TimeToBuildConfig` node with any number of `BuildTime` and `ResearchTime` nodes as well as the following fields:
 - `MorningTime` in seconds, for warp-to-launch-next-morning functionality.
 - `AlarmWarningBufferTime` in seconds, for listing alarms in the in-game TimeToBuild dialog which are set after the completion time, but within the specified buffer period.
 
-`BuildTime` nodes take the following fields:
+`BuildTime` nodes control time taken to construct and rollout vessels and take the following fields:
 - `name`, an arbitrary string which should ideally be unique.
 - `Title`, displayed in the build-time dialog in game.
 - Any number of `Facility`s in which to operate, e.g. on construction of a vessel in the VAB/SPH and/or rollout of the vessel onto the launchpad/runway: `Launchpad`, `Runway`, `VehicleAssemblyBuilding`, `SpaceplaneHangar`.
 - `WholeVessel = true` or `PerNewPart = true` and/or `PerReusedPart = true`, specifies whether the formula applies to the whole vessel or as a sum over new or recovered parts.
 
-Each `BuildTime` node must define one `TimeFormula` node which itself has three fields, `Work`, `Rate`, and `Overhead`, with the total time computed as `Work / Rate + Overhead`. Each of the three fields is an arbitrary mathematical formula with the following constraints:
+`ResearchTime` nodes control time taken to unlock tech tree nodes and take the following fields:
+- `name`, an arbitrary string which should ideally be unique.
+
+Each `BuildTime` and `ResearchTime` node must define one `TimeFormula` node which itself has three fields, `Work`, `Rate`, and `Overhead`, with the total time computed as `Work / Rate + Overhead`. Each of the three fields is an arbitrary mathematical formula with the following constraints:
   - Supports all the basic mathematical operations `+ - * / ^ ( )`.
   - The following variables are currently recognised:
     - Time units: `year`, `day` (of the home planet), `hour`, `minute`, `second`.

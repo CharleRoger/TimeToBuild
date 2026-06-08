@@ -12,6 +12,7 @@ namespace TimeToBuild
         public double MorningTime { get; private set; } = 0;
         public double AlarmWarningBufferTime { get; private set; } = 0;
         public Dictionary<BuildTimeIdentifier, BuildTime> BuildTimes { get; private set; } = new Dictionary<BuildTimeIdentifier, BuildTime>();
+        public Dictionary<string, ResearchTime> ResearchTimes { get; private set; } = new Dictionary<string, ResearchTime>();
 
         public TimeToBuildProfile(ConfigNode node)
         {
@@ -33,6 +34,11 @@ namespace TimeToBuild
                         }
                     }
                 }
+            }
+            foreach (var researchTimeNode in node.GetNodes("ResearchTime"))
+            {
+                var researchTime = new ResearchTime(researchTimeNode);
+                ResearchTimes[researchTime.Name] = researchTime;
             }
         }
 

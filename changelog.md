@@ -1,10 +1,11 @@
 # 0.3.0
 - Changed `BuildTime` formulae to be configured as a single `TimeFormula` node with three fields: `Work`, `Rate` and `Overhead`.
+- Added the ability to define `ResearchTime` nodes in a `TimeToBuildProfile` which control time taken to unlock tech tree nodes.
 # 0.2.2
-- Added "Warp to next morning" button to build-completion launch dialog
+- Added "Warp to next morning" button to build-completion launch dialog.
 # 0.2.1
-- Fixed "Warp to earliest launch" and "Warp to next morning" buttons
-- Re-enabled editor and launchpad/runway launch site selector (note that launching from the launchpad/runway is still disabled)
+- Fixed "Warp to earliest launch" and "Warp to next morning" buttons.
+- Re-enabled editor and launchpad/runway launch site selector (note that launching from the launchpad/runway is still disabled).
 # 0.2.0
 - Split `BuildTime` `Formula` into `WorkFormula`, `RateFormula` and `OverheadFormula`, where the total time is computed as `Work / Rate + Overhead`.
 - Added "Start build" option to editor build dialog:
