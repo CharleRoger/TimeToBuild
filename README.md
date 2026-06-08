@@ -53,7 +53,7 @@ Custom configurations can be described via a `TimeToBuildConfig` node with any n
 
 ### Planned features
 
-#### Core functionality
+#### Tech tree research time
 
 - Tech tree unlocks can also be configured to take time with a custom formula.
   - Individual tech tree nodes can be configured to override the global formula.
