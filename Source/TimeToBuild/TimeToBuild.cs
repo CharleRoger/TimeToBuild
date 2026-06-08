@@ -5,6 +5,8 @@ using System.Linq;
 using static TimeToBuild.TimeToBuildProfile;
 using static TimeToBuild.TimeToBuildUtils;
 using KSP.UI.Screens;
+using KSP.Localization;
+using System;
 
 namespace TimeToBuild
 {
@@ -19,7 +21,6 @@ namespace TimeToBuild
         public LaunchScheduler LaunchScheduler { get; private set; }
 
         protected abstract List<SpaceCenterFacility> GetUsingFacilities();
-        protected abstract bool ButtonsAreActive();
         protected abstract void HandleButtons();
         protected abstract void OnLaunchButtonClicked();
 
@@ -28,15 +29,6 @@ namespace TimeToBuild
             while (SpaceCenter.Instance is null || SpaceCenter.Instance.cb is null) yield return new WaitForFixedUpdate();
 
             LaunchScheduler = new LaunchScheduler(new Calendar(SpaceCenter.Instance.cb));
-        }
-
-        private IEnumerator HandleButtons_Coroutine()
-        {
-            while (true)
-            {
-                if (ButtonsAreActive()) HandleButtons();
-                yield return new WaitForFixedUpdate();
-            }
         }
 
         protected void Start()
@@ -52,9 +44,12 @@ namespace TimeToBuild
 
             StartCoroutine(InitialiseLaunchScheduler_Coroutine());
 
-            StartCoroutine(HandleButtons_Coroutine());
-
             GameEvents.onGameStateSave.Add(OnSave);
+        }
+
+        protected void Update()
+        {
+            HandleButtons();
         }
 
         protected void OnSave(ConfigNode node)
@@ -69,7 +64,7 @@ namespace TimeToBuild
             GameEvents.onGameStateSave.Remove(OnSave);
         }
     }
-    
+
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class TimeToBuildEditor : TimeToBuild
     {
@@ -115,11 +110,6 @@ namespace TimeToBuild
             return usingFacilities;
         }
 
-        protected override bool ButtonsAreActive()
-        {
-            return HighLogic.LoadedSceneIsEditor;
-        }
-
         private void OnEditorExit()
         {
             LaunchScheduler.ResetTime();
@@ -127,6 +117,8 @@ namespace TimeToBuild
 
         protected override void HandleButtons()
         {
+            if (!HighLogic.LoadedSceneIsEditor) return;
+
             EditorLogic.fetch.launchBtn.onClick.RemoveAllListeners();
             EditorLogic.fetch.launchBtn.onClick.AddListener(() => OnLaunchButtonClicked());
 
@@ -155,11 +147,13 @@ namespace TimeToBuild
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class TimeToBuildSpaceCentre : TimeToBuild
     {
+        bool VesselSpawnDialogIsActive => HighLogic.LoadedSceneIsGame && !(VesselSpawnDialog.Instance is null) && VesselSpawnDialog.Instance.isActiveAndEnabled;
+
         protected override List<SpaceCenterFacility> GetUsingFacilities()
         {
             var usingFacilities = new List<SpaceCenterFacility>();
 
-            if (ButtonsAreActive())
+            if (VesselSpawnDialogIsActive)
             {
                 var launchSiteFacility = GetMember<LaunchSiteFacility>(VesselSpawnDialog.Instance, "launchSiteFacility");
                 if (!(launchSiteFacility is null))
@@ -178,20 +172,18 @@ namespace TimeToBuild
             return usingFacilities;
         }
 
-        protected override bool ButtonsAreActive()
-        {
-            return HighLogic.LoadedSceneIsGame && !(VesselSpawnDialog.Instance is null) && VesselSpawnDialog.Instance.isActiveAndEnabled;
-        }
-
         protected override void HandleButtons()
         {
-            var launchButton = GetMember<UnityEngine.UI.Button>(VesselSpawnDialog.Instance, "buttonLaunch");
-            if (!(launchButton is null)) launchButton.interactable = false;
-
-            var launchSiteSelector = GetMember<GameObject>(VesselSpawnDialog.Instance, "launchSiteSelector");
-            foreach (var button in launchSiteSelector.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+            if (VesselSpawnDialogIsActive)
             {
-                button.interactable = false;
+                var launchButton = GetMember<UnityEngine.UI.Button>(VesselSpawnDialog.Instance, "buttonLaunch");
+                if (!(launchButton is null)) launchButton.interactable = false;
+
+                var launchSiteSelector = GetMember<GameObject>(VesselSpawnDialog.Instance, "launchSiteSelector");
+                foreach (var button in launchSiteSelector.GetComponentsInChildren<UnityEngine.UI.Button>(true))
+                {
+                    button.interactable = false;
+                }
             }
         }
 
