@@ -18,7 +18,7 @@ When launching a vessel from the editor, a dialog pops up:
 - "Start build" to begin constructing the vessel in the background.
   - Currently, each of the VAB and SPH can only construct one vessel at a time.
   - An alarm is added at the estimated completion date.
-  - Upon completion, another dialog pops up wherever you are with a button to launch to vessel.
+  - Upon completion, another dialog pops up wherever you are with the same launch options as above.
 
 Reverting to the VAB or SPH reverts back to before the construction of the vessel.
 
@@ -55,7 +55,6 @@ Custom configurations can be described via a `TimeToBuildConfig` node with any n
 
 #### Core functionality
 
-- The vessel launch popup dialog on build completion additionally features a "warp to launch next morning" button like the editor build dialog.
 - Tech tree unlocks can also be configured to take time with a custom formula.
   - Individual tech tree nodes can be configured to override the global formula.
 

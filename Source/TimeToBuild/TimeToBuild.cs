@@ -53,11 +53,8 @@ namespace TimeToBuild
             StartCoroutine(InitialiseLaunchScheduler_Coroutine());
 
             StartCoroutine(HandleButtons_Coroutine());
-        }
 
-        protected void CloseBuildDialog()
-        {
-            LaunchScheduler.UnscheduleLaunch();
+            GameEvents.onGameStateSave.Add(OnSave);
         }
 
         protected void OnSave(ConfigNode node)
@@ -65,6 +62,11 @@ namespace TimeToBuild
             // Bit of a hack, but trying to warp any earlier won't work
 
             if (LaunchScheduler.LaunchScheduled) LaunchScheduler.WarpToLaunchTime();
+        }
+
+        protected void OnDestroy()
+        {
+            GameEvents.onGameStateSave.Remove(OnSave);
         }
     }
     
@@ -93,13 +95,6 @@ namespace TimeToBuild
             if (Scenario.EditorStartTime > 0 && SceneTracker.RevertedFromFlight) LaunchScheduler.ResetTime();
 
             Scenario.EditorStartTime = CurrentTime;
-
-            GameEvents.onGameStateSave.Add(OnSave);
-        }
-
-        protected void OnDestroy()
-        {
-            GameEvents.onGameStateSave.Remove(OnSave);
         }
 
         protected override List<SpaceCenterFacility> GetUsingFacilities()

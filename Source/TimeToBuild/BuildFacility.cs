@@ -248,9 +248,9 @@ namespace TimeToBuild
             LaunchScheduler.LaunchTimeEarliest = CurrentTime;
 
             var optionLaunchNow = GetBuildDialogButton(LocalizerCache.LaunchNow, LaunchBuildVesselNow, CurrentTime);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchBuildVesselNextMorning, LaunchScheduler.LaunchTimeNextMorning); // Problems with timewarp, not using yet
+            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchBuildVesselNextMorning, LaunchScheduler.LaunchTimeNextMorning);
             
-            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, BuildVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow);
+            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, BuildVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
         public void UpdateWorkDoneOnBuildVessel(int vesselIndex, Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)

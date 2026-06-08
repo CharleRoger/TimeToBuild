@@ -1,3 +1,5 @@
+# 0.2.2
+- Added "Warp to next morning" button to build-completion launch dialog
 # 0.2.1
 - Fixed "Warp to earliest launch" and "Warp to next morning" buttons
 - Re-enabled editor and launchpad/runway launch site selector (note that launching from the launchpad/runway is still disabled)
