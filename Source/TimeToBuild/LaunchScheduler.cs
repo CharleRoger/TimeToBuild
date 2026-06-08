@@ -31,7 +31,7 @@ namespace TimeToBuild
 
                 var facilityVariable = new Dictionary<string, double>();
                 facilityVariable["facility_level"] = GetFacilityLevel(buildTime.Key.Facility);
-                buildRates[buildTime.Key] = FormulaParser.ParseAndComputeFormula(buildTime.Value.RateFormula, timeUnitVariables, facilityVariables, facilityVariable);
+                buildRates[buildTime.Key] = FormulaParser.ParseAndComputeFormula(buildTime.Value.TimeFormula.Rate, timeUnitVariables, facilityVariables, facilityVariable);
             }
 
             return buildRates;

@@ -1,3 +1,5 @@
+# 0.3.0
+- Changed `BuildTime` formulae to be configured as a single `TimeFormula` node with three fields: `Work`, `Rate` and `Overhead`.
 # 0.2.2
 - Added "Warp to next morning" button to build-completion launch dialog
 # 0.2.1

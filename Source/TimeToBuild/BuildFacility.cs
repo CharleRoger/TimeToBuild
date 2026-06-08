@@ -89,8 +89,8 @@ namespace TimeToBuild
                     {
                         if (!buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                         }
                     }
                 }
@@ -100,15 +100,15 @@ namespace TimeToBuild
                     {
                         if (buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                         }
                     }
                 }
                 if (buildTime.WholeVessel)
                 {
-                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.WorkFormula, timeUnitVariables, facilityVariables, shipVariables);
-                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.OverheadFormula, timeUnitVariables, facilityVariables, shipVariables);
+                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, shipVariables);
+                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, shipVariables);
                 }
 
                 if (buildChunk.Work > 0 || buildChunk.Overhead > 0) buildChunks.Add(buildChunk);
