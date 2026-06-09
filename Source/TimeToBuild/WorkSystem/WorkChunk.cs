@@ -72,13 +72,5 @@ namespace TimeToBuild
 
             return node;
         }
-
-        public struct BuildDatum
-        {
-            public string Title;
-            public int Duration;
-            public int NewPartCount;
-            public int ReusedPartCount;
-        }
     }
 }

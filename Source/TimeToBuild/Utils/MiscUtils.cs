@@ -1,11 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using UnityEngine;
 
 namespace TimeToBuild
 {
-    public static class TimeToBuildUtils
+    public static class MiscUtils
     {
         public static readonly string VariableDryMass = "dry_mass";
         public static readonly string VariableWetMass = "wet_mass";
@@ -18,35 +17,6 @@ namespace TimeToBuild
         public static bool ScrapYardUseInventory => !(ScrapYard.ScrapYard.Instance is null) && ScrapYard.ScrapYard.Instance.Settings.CurrentSaveSettings.UseInventory;
 
         public static double CurrentTime => HighLogic.LoadedSceneHasPlanetarium && !(Planetarium.fetch is null) ? Planetarium.GetUniversalTime() : HighLogic.CurrentGame.flightState.universalTime;
-
-        public struct BuildPart
-        {
-            public uint ID;
-            public bool ReuseFromInventory;
-            public double DryMass;
-            public double WetMass;
-            public double DryCost;
-            public double WetCost;
-            public int NumBuilds;
-        }
-
-        [KSPAddon(KSPAddon.Startup.Instantly, true)]
-        public class SceneTracker : MonoBehaviour
-        {
-            public static bool RevertedFromFlight;
-
-            private void OnSceneSwitch(GameEvents.FromToAction<GameScenes, GameScenes> data)
-            {
-                RevertedFromFlight = data.from == GameScenes.FLIGHT && data.to == GameScenes.EDITOR;
-            }
-
-            public void Awake()
-            {
-                DontDestroyOnLoad(this);
-
-                GameEvents.onGameSceneSwitchRequested.Add(OnSceneSwitch);
-            }
-        }
 
         public static float GetFacilityLevel(SpaceCenterFacility facility)
         {
@@ -70,7 +40,7 @@ namespace TimeToBuild
             return variables;
         }
 
-        public static Dictionary<string, double> GetPartVariables(BuildPart buildPart)
+        public static Dictionary<string, double> GetPartVariables(BuildVessel.BuildPart buildPart)
         {
             var variables = new Dictionary<string, double>();
 

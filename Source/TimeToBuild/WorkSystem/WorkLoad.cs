@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using static TimeToBuild.TimeToBuildUtils;
+using static TimeToBuild.MiscUtils;
 
 namespace TimeToBuild
 {

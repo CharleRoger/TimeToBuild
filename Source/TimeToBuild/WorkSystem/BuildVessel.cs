@@ -2,6 +2,25 @@
 {
     public class BuildVessel
     {
+        public struct BuildPart
+        {
+            public uint ID;
+            public bool ReuseFromInventory;
+            public double DryMass;
+            public double WetMass;
+            public double DryCost;
+            public double WetCost;
+            public int NumBuilds;
+        }
+
+        public struct WorkChunkDatum
+        {
+            public string Title;
+            public int Duration;
+            public int NewPartCount;
+            public int ReusedPartCount;
+        }
+
         [Persistent]
         public string LaunchSiteName { get; private set; } = "";
         [Persistent]
