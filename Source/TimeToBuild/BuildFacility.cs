@@ -7,18 +7,13 @@ using static TimeToBuild.TimeToBuildUtils;
 
 namespace TimeToBuild
 {
-    public class BuildFacility
+    public abstract class WorkFacility
     {
-        private SpaceCenterFacility Facility;
-        private List<SpaceCenterFacility> UsingFacilities = new List<SpaceCenterFacility>();
-
-        [Persistent]
         public List<WorkLoad> WorkLoads { get; private set; } = new List<WorkLoad>();
-        private BuildVessel BuildVesselToLaunch = null;
+        public SpaceCenterFacility Facility { get; private set; }
+        public List<SpaceCenterFacility> UsingFacilities { get; private set; } = new List<SpaceCenterFacility>();
 
-        private LaunchScheduler LaunchScheduler => TimeToBuild.Instance.LaunchScheduler;
-
-        public BuildFacility(SpaceCenterFacility facility)
+        public WorkFacility(SpaceCenterFacility facility)
         {
             Facility = facility;
 
@@ -26,6 +21,8 @@ namespace TimeToBuild
             if (facility == SpaceCenterFacility.VehicleAssemblyBuilding) UsingFacilities.Add(SpaceCenterFacility.LaunchPad);
             if (facility == SpaceCenterFacility.SpaceplaneHangar) UsingFacilities.Add(SpaceCenterFacility.Runway);
         }
+
+        public abstract void OnWorkLoadComplete(WorkLoad workLoad);
 
         public void Load(ConfigNode node)
         {
@@ -43,7 +40,69 @@ namespace TimeToBuild
             }
         }
 
-        public List<WorkChunk> ComputeWorkChunks(List<BuildPart> buildParts)
+        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
+        {
+            var workLoad = WorkLoads[workLoadIndex];
+
+            bool workComplete = workLoad.UpdateWorkDone(buildRates);
+
+            if (workComplete)
+            {
+                WorkLoads.RemoveAt(workLoadIndex);
+
+                TimeWarp.SetRate(0, true);
+
+                OnWorkLoadComplete(workLoad);
+            }
+        }
+
+        public IEnumerator UpdateWorkLoads_Coroutine()
+        {
+            while (TimeToBuild.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
+
+            while (true)
+            {
+                var buildRates = TimeToBuild.Instance.GetBuildRates();
+
+                for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
+                {
+                    UpdateWorkLoad(workLoadIndex, buildRates);
+                }
+
+                yield return new WaitForFixedUpdate();
+            }
+        }
+
+        public bool TryAddWorkLoad(WorkLoad workLoad, bool actuallyAddIt)
+        {
+            if (WorkLoads.Count > 0) return false;
+
+            if (actuallyAddIt) WorkLoads.Add(workLoad);
+
+            return true;
+        }
+    }
+
+    public class BuildFacility : WorkFacility
+    {
+        private BuildVessel BuildVesselToLaunch = null;
+        private LaunchScheduler LaunchScheduler => TimeToBuild.Instance.LaunchScheduler;
+
+        public BuildFacility(SpaceCenterFacility facility) : base(facility)
+        {
+
+        }
+
+        public override void OnWorkLoadComplete(WorkLoad workLoad)
+        {
+            if (!(workLoad.BuildVessel is null))
+            {
+                BuildVesselToLaunch = workLoad.BuildVessel;
+                SpawnLaunchDialog();
+            }
+        }
+
+        public List<WorkChunk> ComputeBuildWorkChunks(List<BuildPart> buildParts)
         {
             var workChunks = new List<WorkChunk>();
 
@@ -173,7 +232,7 @@ namespace TimeToBuild
             var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
             var numReusedParts = buildParts.Count(buildPart => buildPart.ReuseFromInventory);
 
-            var workChunks = ComputeWorkChunks(buildParts);
+            var workChunks = ComputeBuildWorkChunks(buildParts);
 
             var buildRates = TimeToBuild.Instance.GetBuildRates();
 
@@ -253,43 +312,6 @@ namespace TimeToBuild
             SpawnMultiOptionDialog(LocalizerCache.BuildComplete, BuildVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
-        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
-        {
-            var workLoad = WorkLoads[workLoadIndex];
-
-            bool workComplete = workLoad.UpdateWorkDone(buildRates);
-
-            if (workComplete)
-            {
-                WorkLoads.RemoveAt(workLoadIndex);
-
-                TimeWarp.SetRate(0, true);
-
-                if (!(workLoad.BuildVessel is null))
-                {
-                    BuildVesselToLaunch = workLoad.BuildVessel;
-                    SpawnLaunchDialog();
-                }
-            }
-        }
-
-        public IEnumerator UpdateWorkLoads_Coroutine()
-        {
-            while (TimeToBuild.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
-
-            while (true)
-            {
-                var buildRates = TimeToBuild.Instance.GetBuildRates();
-
-                for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
-                {
-                    UpdateWorkLoad(workLoadIndex, buildRates);
-                }
-
-                yield return new WaitForFixedUpdate();
-            }
-        }
-
         private void LaunchBuildVessel()
         {
             if (LaunchScheduler is null || !LaunchScheduler.LaunchScheduled || BuildVesselToLaunch is null) return;
@@ -316,15 +338,6 @@ namespace TimeToBuild
             LaunchBuildVessel();
         }
 
-        public bool TryAddWorkLoad(WorkLoad workLoad, bool actuallyAddIt)
-        {
-            if (WorkLoads.Count > 0) return false;
-
-            if (actuallyAddIt) WorkLoads.Add(workLoad);
-
-            return true;
-        }
-
         private bool TryStartBuild(List<WorkChunk> workChunks, bool actuallyAddIt)
         {
             var success = true;
@@ -343,7 +356,7 @@ namespace TimeToBuild
         public void OnStartBuild()
         {
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeWorkChunks(buildParts);
+            var workChunks = ComputeBuildWorkChunks(buildParts);
 
             if (TryStartBuild(workChunks, true))
             {
@@ -371,7 +384,7 @@ namespace TimeToBuild
             if (!HighLogic.LoadedSceneIsEditor) return;
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeWorkChunks(buildParts);
+            var workChunks = ComputeBuildWorkChunks(buildParts);
 
             if (TryStartBuild(workChunks, false))
             {
@@ -385,7 +398,7 @@ namespace TimeToBuild
             if (!HighLogic.LoadedSceneIsEditor) return;
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeWorkChunks(buildParts);
+            var workChunks = ComputeBuildWorkChunks(buildParts);
 
             if (TryStartBuild(workChunks, false))
             {
