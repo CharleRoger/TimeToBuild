@@ -253,7 +253,7 @@ namespace TimeToBuild
             SpawnMultiOptionDialog(LocalizerCache.BuildComplete, BuildVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
-        public void UpdateWorkLoad(int workLoadIndex, Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)
+        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
         {
             var workLoad = WorkLoads[workLoadIndex];
 

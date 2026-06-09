@@ -35,7 +35,6 @@
     <Compile Include="BuildFacility.cs" />
     <Compile Include="BuildTime.cs" />
     <Compile Include="BuildVessel.cs" />
-    <Compile Include="ResearchTime.cs" />
     <Compile Include="TimeFormula.cs" />
     <Compile Include="FormulaParser.cs" />
     <Compile Include="LaunchScheduler.cs" />

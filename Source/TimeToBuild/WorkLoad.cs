@@ -61,7 +61,7 @@ namespace TimeToBuild
             return node;
         }
 
-        public bool UpdateWorkDone(Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)
+        public bool UpdateWorkDone(Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
         {
             if (HighLogic.LoadedSceneIsEditor) return false;
 

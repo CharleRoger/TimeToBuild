@@ -18,9 +18,9 @@ namespace TimeToBuild
             Calendar = calendar;
         }
 
-        public Dictionary<BuildTime.BuildTimeIdentifier, double> GetBuildRates()
+        public Dictionary<WorkTime.WorkTimeIdentifier, double> GetBuildRates()
         {
-            var buildRates = new Dictionary<BuildTime.BuildTimeIdentifier, double>();
+            var buildRates = new Dictionary<WorkTime.WorkTimeIdentifier, double>();
 
             var timeUnitVariables = Calendar.GetTimeUnitVariables();
             var facilityVariables = GetFacilityVariables();

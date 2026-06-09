@@ -1,22 +1,22 @@
-﻿using static TimeToBuild.BuildTime;
+﻿using static TimeToBuild.WorkTime;
 
 namespace TimeToBuild
 {
     public class WorkChunk
     {
-        public BuildTimeIdentifier Identifier { get; private set; }
+        public WorkTimeIdentifier Identifier { get; private set; }
         public double Work = 0;
         public double Overhead = 0;
         public double CompletionTime = -1;
 
-        public WorkChunk(BuildTimeIdentifier identifier)
+        public WorkChunk(WorkTimeIdentifier identifier)
         {
             Identifier = identifier;
         }
 
         public WorkChunk(ConfigNode node)
         {
-            var identifier = new BuildTimeIdentifier();
+            var identifier = new WorkTimeIdentifier();
             if (node.HasValue("name")) identifier.Name = node.GetValue("name");
             if (node.HasValue("Facility"))
             {
