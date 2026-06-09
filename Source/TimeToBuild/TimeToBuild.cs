@@ -6,29 +6,26 @@ using static TimeToBuild.TimeToBuildProfile;
 using static TimeToBuild.TimeToBuildUtils;
 using KSP.UI.Screens;
 using KSP.Localization;
-using System;
 
 namespace TimeToBuild
 {
     public abstract class TimeToBuild : MonoBehaviour
     {
         public static TimeToBuild Instance = null;
-
         public TimeToBuildProfile Profile { get; private set; }
-
         public TimeToBuildScenario Scenario { get; private set; }
-
-        public LaunchScheduler LaunchScheduler { get; private set; }
+        public Calendar Calendar { get; private set; }
+        public LaunchScheduler LaunchScheduler { get; private set; } = new LaunchScheduler();
 
         protected abstract List<SpaceCenterFacility> GetUsingFacilities();
         protected abstract void HandleButtons();
         protected abstract void OnLaunchButtonClicked();
 
-        private IEnumerator InitialiseLaunchScheduler_Coroutine()
+        private IEnumerator InitialiseCalendar_Coroutine()
         {
             while (SpaceCenter.Instance is null || SpaceCenter.Instance.cb is null) yield return new WaitForFixedUpdate();
 
-            LaunchScheduler = new LaunchScheduler(new Calendar(SpaceCenter.Instance.cb));
+            Calendar = new Calendar(SpaceCenter.Instance.cb);
         }
 
         protected void Start()
@@ -42,7 +39,7 @@ namespace TimeToBuild
 
             if (Scenario is null || Scenario.BuildFacilityVAB is null || Scenario.BuildFacilitySPH is null) return;
 
-            StartCoroutine(InitialiseLaunchScheduler_Coroutine());
+            StartCoroutine(InitialiseCalendar_Coroutine());
 
             GameEvents.onGameStateSave.Add(OnSave);
         }
@@ -62,6 +59,25 @@ namespace TimeToBuild
         protected void OnDestroy()
         {
             GameEvents.onGameStateSave.Remove(OnSave);
+        }
+
+        public Dictionary<WorkTime.WorkTimeIdentifier, double> GetBuildRates()
+        {
+            var buildRates = new Dictionary<WorkTime.WorkTimeIdentifier, double>();
+
+            var timeUnitVariables = Calendar.GetTimeUnitVariables();
+            var facilityVariables = GetFacilityVariables();
+
+            foreach (var buildTime in Profile.BuildTimes)
+            {
+                var facility = buildTime.Key.Facility;
+
+                var facilityVariable = new Dictionary<string, double>();
+                facilityVariable["facility_level"] = GetFacilityLevel(buildTime.Key.Facility);
+                buildRates[buildTime.Key] = FormulaParser.ParseAndComputeFormula(buildTime.Value.TimeFormula.Rate, timeUnitVariables, facilityVariables, facilityVariable);
+            }
+
+            return buildRates;
         }
     }
 

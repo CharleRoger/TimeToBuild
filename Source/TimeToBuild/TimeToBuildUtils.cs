@@ -97,7 +97,7 @@ namespace TimeToBuild
 
         public static DialogGUIButton GetBuildDialogButton(string optionText, Callback callback = null, double date = -1)
         {
-            if (date > 0) optionText += "\n" + TimeToBuild.Instance.LaunchScheduler.Calendar.GetDateString(date);
+            if (date > 0) optionText += "\n" + TimeToBuild.Instance.Calendar.GetDateString(date);
             return new DialogGUIButton(optionText, callback, 300, 40, true);
         }
 

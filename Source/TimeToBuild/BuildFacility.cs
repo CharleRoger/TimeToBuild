@@ -70,7 +70,7 @@ namespace TimeToBuild
                 shipVariables[VariableWetCost] += variables[VariableWetCost];
             }
 
-            var timeUnitVariables = LaunchScheduler.Calendar.GetTimeUnitVariables();
+            var timeUnitVariables = TimeToBuild.Instance.Calendar.GetTimeUnitVariables();
 
             foreach (var buildTime in TimeToBuild.Instance.Profile.BuildTimes.Values)
             {
@@ -175,7 +175,7 @@ namespace TimeToBuild
 
             var workChunks = ComputeWorkChunks(buildParts);
 
-            var buildRates = LaunchScheduler.GetBuildRates();
+            var buildRates = TimeToBuild.Instance.GetBuildRates();
 
             foreach (var workChunk in workChunks)
             {
@@ -191,7 +191,7 @@ namespace TimeToBuild
                     var rate = buildRates[workChunk.Identifier];
                     workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
                     if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
-                    workChunkDatum.Duration = LaunchScheduler.Calendar.RoundDuration(workChunkDatum.Duration);
+                    workChunkDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
 
                     if (buildTimeConfig.PerNewPart) workChunkDatum.NewPartCount = numNewParts;
 
@@ -227,14 +227,14 @@ namespace TimeToBuild
                     title += ")";
                 }
 
-                title += "\n" + LaunchScheduler.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
+                title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
-            title += LocalizerCache.Total + "\n" + LaunchScheduler.Calendar.GetDurationString(totalBuildTime) + "\n\n";
+            title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
             LaunchScheduler.LaunchTimeEarliest = TimeToBuild.Instance.Scenario.EditorStartTime + totalBuildTime;
 
             var message = "";
-            foreach (var date in LaunchScheduler.GetSalientDates()) message += LaunchScheduler.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            foreach (var date in LaunchScheduler.GetSalientDates()) message += TimeToBuild.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
             var optionStartBuild = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
             var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest);
@@ -275,11 +275,11 @@ namespace TimeToBuild
 
         public IEnumerator UpdateWorkLoads_Coroutine()
         {
-            while (TimeToBuild.Instance is null || LaunchScheduler is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
+            while (TimeToBuild.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
 
             while (true)
             {
-                var buildRates = LaunchScheduler.GetBuildRates();
+                var buildRates = TimeToBuild.Instance.GetBuildRates();
 
                 for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
                 {
@@ -292,7 +292,7 @@ namespace TimeToBuild
 
         private void LaunchBuildVessel()
         {
-            if (!LaunchScheduler.LaunchScheduled || BuildVesselToLaunch is null) return;
+            if (LaunchScheduler is null || !LaunchScheduler.LaunchScheduled || BuildVesselToLaunch is null) return;
 
             var tempFile = KSPUtil.ApplicationRootPath + "saves/" + HighLogic.SaveFolder + "/Ships/temp.craft";
             BuildVesselToLaunch.ShipConstruct.SaveShip().Save(tempFile);
