@@ -165,9 +165,9 @@ namespace TimeToBuild
             return buildParts;
         }
 
-        public List<WorkChunk.WorkChunkDatum> GetWorkChunkData()
+        public List<WorkChunk.BuildDatum> GetBuildData()
         {
-            var workChunkData = new List<WorkChunk.WorkChunkDatum>();
+            var buildData = new List<WorkChunk.BuildDatum>();
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
@@ -185,49 +185,49 @@ namespace TimeToBuild
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var workChunkDatum = new WorkChunk.WorkChunkDatum();
-                    workChunkDatum.Title = buildTimeConfig.Title;
+                    var buildDatum = new WorkChunk.BuildDatum();
+                    buildDatum.Title = buildTimeConfig.Title;
 
                     var rate = buildRates[workChunk.Identifier];
-                    workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
-                    if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
-                    workChunkDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
+                    buildDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
+                    if (buildDatum.Duration < 0) buildDatum.Duration = 0;
+                    buildDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(buildDatum.Duration);
 
-                    if (buildTimeConfig.PerNewPart) workChunkDatum.NewPartCount = numNewParts;
+                    if (buildTimeConfig.PerNewPart) buildDatum.NewPartCount = numNewParts;
 
-                    if (buildTimeConfig.PerReusedPart) workChunkDatum.ReusedPartCount = numReusedParts;
+                    if (buildTimeConfig.PerReusedPart) buildDatum.ReusedPartCount = numReusedParts;
 
-                    workChunkData.Add(workChunkDatum);
+                    buildData.Add(buildDatum);
                 }
             }
 
-            return workChunkData;
+            return buildData;
         }
 
         public void SpawnBuildDialog()
         {
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            var workChunkData = GetWorkChunkData();
+            var buildData = GetBuildData();
 
             var title = "";
             var totalBuildTime = 0;
-            foreach (var workChunkDatum in workChunkData)
+            foreach (var buildDatum in buildData)
             {
-                title += workChunkDatum.Title;
+                title += buildDatum.Title;
 
-                totalBuildTime += workChunkDatum.Duration;
+                totalBuildTime += buildDatum.Duration;
 
-                if (workChunkDatum.NewPartCount > 0 || workChunkDatum.ReusedPartCount > 0)
+                if (buildDatum.NewPartCount > 0 || buildDatum.ReusedPartCount > 0)
                 {
                     title += " (";
-                    if (workChunkDatum.NewPartCount > 0) title += workChunkDatum.NewPartCount.ToString() + " " + (workChunkDatum.NewPartCount > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
-                    if (workChunkDatum.NewPartCount > 0 && workChunkDatum.ReusedPartCount > 0) title += ", ";
-                    if (workChunkDatum.ReusedPartCount > 0) title += workChunkDatum.ReusedPartCount.ToString() + " " + (workChunkDatum.ReusedPartCount > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
+                    if (buildDatum.NewPartCount > 0) title += buildDatum.NewPartCount.ToString() + " " + (buildDatum.NewPartCount > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
+                    if (buildDatum.NewPartCount > 0 && buildDatum.ReusedPartCount > 0) title += ", ";
+                    if (buildDatum.ReusedPartCount > 0) title += buildDatum.ReusedPartCount.ToString() + " " + (buildDatum.ReusedPartCount > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
                     title += ")";
                 }
 
-                title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
+                title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(buildDatum.Duration) + "\n\n";
             }
             title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 

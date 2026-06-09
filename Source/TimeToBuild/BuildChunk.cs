@@ -73,7 +73,7 @@ namespace TimeToBuild
             return node;
         }
 
-        public struct WorkChunkDatum
+        public struct BuildDatum
         {
             public string Title;
             public int Duration;
