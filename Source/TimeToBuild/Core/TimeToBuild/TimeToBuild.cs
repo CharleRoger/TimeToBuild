@@ -15,7 +15,6 @@ namespace TimeToBuild
         public Calendar Calendar { get; private set; }
         public LaunchScheduler LaunchScheduler { get; private set; } = new LaunchScheduler();
 
-        protected abstract List<SpaceCenterFacility> GetUsingFacilities();
         protected abstract void HandleButtons();
         protected abstract void OnLaunchButtonClicked();
 

@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using static TimeToBuild.MiscUtils;
 
 namespace TimeToBuild
@@ -29,24 +28,6 @@ namespace TimeToBuild
             if (Scenario.EditorStartTime > 0 && SceneTracker.RevertedFromFlight) LaunchScheduler.ResetTime();
 
             Scenario.EditorStartTime = CurrentTime;
-        }
-
-        protected override List<SpaceCenterFacility> GetUsingFacilities()
-        {
-            var usingFacilities = new List<SpaceCenterFacility>();
-
-            if (EditorDriver.editorFacility == EditorFacility.VAB)
-            {
-                usingFacilities.Add(SpaceCenterFacility.VehicleAssemblyBuilding);
-                usingFacilities.Add(SpaceCenterFacility.LaunchPad);
-            }
-            else if (EditorDriver.editorFacility == EditorFacility.SPH)
-            {
-                usingFacilities.Add(SpaceCenterFacility.SpaceplaneHangar);
-                usingFacilities.Add(SpaceCenterFacility.Runway);
-            }
-
-            return usingFacilities;
         }
 
         private void OnEditorExit()

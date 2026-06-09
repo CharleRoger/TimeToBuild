@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using static TimeToBuild.MiscUtils;
 using KSP.UI.Screens;
 using KSP.Localization;
@@ -11,29 +10,6 @@ namespace TimeToBuild
     {
         bool VesselSpawnDialogIsActive => HighLogic.LoadedSceneIsGame && !(VesselSpawnDialog.Instance is null) && VesselSpawnDialog.Instance.isActiveAndEnabled;
         RDNode SelectedRDNode => HighLogic.LoadedSceneIsGame && !(RDController.Instance is null) && RDController.Instance.isActiveAndEnabled ? RDController.Instance.node_selected : null;
-
-        protected override List<SpaceCenterFacility> GetUsingFacilities()
-        {
-            var usingFacilities = new List<SpaceCenterFacility>();
-
-            if (VesselSpawnDialogIsActive)
-            {
-                var launchSiteFacility = GetMember<LaunchSiteFacility>(VesselSpawnDialog.Instance, "launchSiteFacility");
-                if (!(launchSiteFacility is null))
-                {
-                    if (launchSiteFacility.facilityType == EditorFacility.VAB)
-                    {
-                        usingFacilities.Add(SpaceCenterFacility.LaunchPad);
-                    }
-                    else if (launchSiteFacility.facilityType == EditorFacility.SPH)
-                    {
-                        usingFacilities.Add(SpaceCenterFacility.Runway);
-                    }
-                }
-            }
-
-            return usingFacilities;
-        }
 
         protected override void HandleButtons()
         {
