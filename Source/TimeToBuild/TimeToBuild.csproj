@@ -33,7 +33,7 @@
   <ItemGroup>
     <Compile Include="BuildChunk.cs" />
     <Compile Include="BuildFacility.cs" />
-    <Compile Include="BuildTime.cs" />
+    <Compile Include="WorkTime.cs" />
     <Compile Include="BuildVessel.cs" />
     <Compile Include="TimeFormula.cs" />
     <Compile Include="FormulaParser.cs" />
