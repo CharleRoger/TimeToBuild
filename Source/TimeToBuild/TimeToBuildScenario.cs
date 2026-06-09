@@ -16,10 +16,10 @@
 
             BuildFacilitySPH = new BuildFacility(SpaceCenterFacility.SpaceplaneHangar);
             if (node.HasNode("BuildFacilityVAB")) BuildFacilityVAB.Load(node.GetNode("BuildFacilityVAB"));
-            StartCoroutine(BuildFacilityVAB.UpdateBuildVessels_Coroutine());
+            StartCoroutine(BuildFacilityVAB.UpdateWorkLoads_Coroutine());
 
             if (node.HasNode("BuildFacilitySPH")) BuildFacilitySPH.Load(node.GetNode("BuildFacilitySPH"));
-            StartCoroutine(BuildFacilitySPH.UpdateBuildVessels_Coroutine());
+            StartCoroutine(BuildFacilitySPH.UpdateWorkLoads_Coroutine());
         }
 
         public override void OnSave(ConfigNode node)

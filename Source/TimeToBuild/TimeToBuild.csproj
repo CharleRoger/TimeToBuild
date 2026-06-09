@@ -47,6 +47,7 @@
     <Compile Include="TimeToBuildProfile.cs" />
     <Compile Include="TimeToBuildSettings.cs" />
     <Compile Include="Calendar.cs" />
+    <Compile Include="WorkLoad.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ScrapYard, Version=2.2.1.0, Culture=neutral, processorArchitecture=MSIL">

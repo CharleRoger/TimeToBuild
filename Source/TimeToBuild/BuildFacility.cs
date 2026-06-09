@@ -13,7 +13,7 @@ namespace TimeToBuild
         private List<SpaceCenterFacility> UsingFacilities = new List<SpaceCenterFacility>();
 
         [Persistent]
-        public List<BuildVessel> BuildVessels { get; private set; } = new List<BuildVessel>();
+        public List<WorkLoad> WorkLoads { get; private set; } = new List<WorkLoad>();
         private BuildVessel BuildVesselToLaunch = null;
 
         private LaunchScheduler LaunchScheduler => TimeToBuild.Instance.LaunchScheduler;
@@ -29,17 +29,17 @@ namespace TimeToBuild
 
         public void Load(ConfigNode node)
         {
-            foreach (var buildVesselNode in node.GetNodes("BuildVessel"))
+            foreach (var workLoadNode in node.GetNodes("WorkLoad"))
             {
-                BuildVessels.Add(new BuildVessel(buildVesselNode));
+                WorkLoads.Add(new WorkLoad(workLoadNode));
             }
         }
 
         public void Save(ConfigNode node)
         {
-            foreach (var buildVessel in BuildVessels)
+            foreach (var buildVessel in WorkLoads)
             {
-                node.AddNode("BuildVessel", buildVessel.GetConfigNode());
+                node.AddNode("WorkLoad", buildVessel.GetConfigNode());
             }
         }
 
@@ -253,25 +253,27 @@ namespace TimeToBuild
             SpawnMultiOptionDialog(LocalizerCache.BuildComplete, BuildVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
-        public void UpdateWorkDoneOnBuildVessel(int vesselIndex, Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)
+        public void UpdateWorkLoad(int workLoadIndex, Dictionary<BuildTime.BuildTimeIdentifier, double> buildRates)
         {
-            var buildVessel = BuildVessels[vesselIndex];
+            var workLoad = WorkLoads[workLoadIndex];
 
-            bool buildComplete = buildVessel.UpdateWorkDone(buildRates);
+            bool workComplete = workLoad.UpdateWorkDone(buildRates);
 
-            if (buildComplete)
+            if (workComplete)
             {
-                BuildVesselToLaunch = buildVessel;
-
-                BuildVessels.RemoveAt(vesselIndex);
+                WorkLoads.RemoveAt(workLoadIndex);
 
                 TimeWarp.SetRate(0, true);
 
-                SpawnLaunchDialog();
+                if (!(workLoad.BuildVessel is null))
+                {
+                    BuildVesselToLaunch = workLoad.BuildVessel;
+                    SpawnLaunchDialog();
+                }
             }
         }
 
-        public IEnumerator UpdateBuildVessels_Coroutine()
+        public IEnumerator UpdateWorkLoads_Coroutine()
         {
             while (TimeToBuild.Instance is null || LaunchScheduler is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
 
@@ -279,9 +281,9 @@ namespace TimeToBuild
             {
                 var buildRates = LaunchScheduler.GetBuildRates();
 
-                for (int vesselIndex = 0; vesselIndex < BuildVessels.Count; vesselIndex++)
+                for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
                 {
-                    UpdateWorkDoneOnBuildVessel(vesselIndex, buildRates);
+                    UpdateWorkLoad(workLoadIndex, buildRates);
                 }
 
                 yield return new WaitForFixedUpdate();
@@ -314,11 +316,11 @@ namespace TimeToBuild
             LaunchBuildVessel();
         }
 
-        public bool TryAddBuildVessel(BuildVessel buildVessel, bool actuallyAddIt)
+        public bool TryAddWorkLoad(WorkLoad workLoad, bool actuallyAddIt)
         {
-            if (BuildVessels.Count > 0) return false;
+            if (WorkLoads.Count > 0) return false;
 
-            if (actuallyAddIt) BuildVessels.Add(buildVessel);
+            if (actuallyAddIt) WorkLoads.Add(workLoad);
 
             return true;
         }
@@ -328,9 +330,9 @@ namespace TimeToBuild
             var success = true;
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var buildVessel = new BuildVessel(EditorLogic.fetch.ship, EditorLogic.fetch.launchSiteName, TimeToBuild.Instance.Scenario.EditorStartTime, workChunks);
-
-                success = TryAddBuildVessel(buildVessel, actuallyAddIt);
+                var buildVessel = new BuildVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
+                var workLoad = new WorkLoad(TimeToBuild.Instance.Scenario.EditorStartTime, workChunks, buildVessel);
+                success = TryAddWorkLoad(workLoad, actuallyAddIt);
 
                 if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.FacilityBusy);
             }
