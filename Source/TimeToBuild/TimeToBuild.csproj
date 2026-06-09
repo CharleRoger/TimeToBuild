@@ -33,6 +33,7 @@
   <ItemGroup>
     <Compile Include="Core\TimeToBuild\TimeToBuildSpaceCentre.cs" />
     <Compile Include="Core\TimeToBuild\TimeToBuildEditor.cs" />
+    <Compile Include="Facilities\ResearchFacility.cs" />
     <Compile Include="Facilities\WorkFacility.cs" />
     <Compile Include="Utils\SceneTracker.cs" />
     <Compile Include="WorkSystem\WorkChunk.cs" />

@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using static TimeToBuild.MiscUtils;
 using KSP.UI.Screens;
-using KSP.Localization;
 
 namespace TimeToBuild
 {
@@ -38,66 +37,11 @@ namespace TimeToBuild
             }
         }
 
-        private void UnlockTech(RDTech tech)
-        {
-            if (SelectedRDNode is null) return;
-
-            tech.host.AddScience(-tech.scienceCost, TransactionReasons.RnDTechResearch);
-            tech.UnlockTech(!(tech.host is null));
-        }
-
-        private void StartResearchTech(RDTech tech)
-        {
-            // Just unlock immediately for now
-            UnlockTech(tech);
-
-            SelectedRDNode.UpdateGraphics();
-            RDController.Instance.UpdatePanel();
-            RDController.Instance.partList.Refresh();
-        }
-
-        private RDTech.OperationResult TryResearchTech(RDTech tech)
-        {
-            var operationResult = RDTech.OperationResult.Successful;
-
-            var scienceCostLimit = GameVariables.Instance.GetScienceCostLimit(ScenarioUpgradeableFacilities.GetFacilityLevel(SpaceCenterFacility.ResearchAndDevelopment));
-
-            if (tech.state == RDTech.State.Available)
-            {
-                Debug.LogError("[RDTech]: Node is already available", tech.gameObject);
-
-                operationResult = RDTech.OperationResult.Failure;
-            }
-            else if (!CurrencyModifierQuery.RunQuery(TransactionReasons.RnDTechResearch, 0, -tech.scienceCost, 0).CanAfford(c =>
-            {
-                Debug.Log(StringBuilderCache.Format("[RDTech]: Not enough {0} to research this node.", c), tech.gameObject);
-                ScreenMessages.PostScreenMessage(StringBuilderCache.Format(Localizer.Format("#autoLOC_299393", c.Description())), 3, ScreenMessageStyle.UPPER_CENTER);
-            }))
-            {
-                operationResult = RDTech.OperationResult.NotEnoughFunds;
-            }
-            else if (tech.scienceCost > scienceCostLimit)
-            {
-                Debug.Log("[RDTech]: Node exceeds Science cost limit.", tech.gameObject);
-                ScreenMessages.PostScreenMessage(Localizer.Format("#autoLOC_299404", scienceCostLimit.ToString("N0")), 3, ScreenMessageStyle.UPPER_CENTER);
-
-                operationResult = RDTech.OperationResult.ScienceCostLimitExceeded;
-            }
-            else
-            {
-                StartResearchTech(tech);
-            }
-
-            GameEvents.OnTechnologyResearched.Fire(new GameEvents.HostTargetAction<RDTech, RDTech.OperationResult>(tech, operationResult));
-
-            return operationResult;
-        }
-
         private void OnResearchButtonClicked()
         {
-            if (SelectedRDNode is null) return;
+            if (Scenario is null || Scenario.ResearchFacility is null || SelectedRDNode is null) return;
 
-            TryResearchTech(SelectedRDNode.tech);
+            Scenario.ResearchFacility.TryStartResearch(SelectedRDNode);
         }
 
         protected override void OnLaunchButtonClicked()
