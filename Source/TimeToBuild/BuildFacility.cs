@@ -43,11 +43,11 @@ namespace TimeToBuild
             }
         }
 
-        public List<BuildChunk> ComputeBuildChunks(List<BuildPart> buildParts)
+        public List<WorkChunk> ComputeWorkChunks(List<BuildPart> buildParts)
         {
-            var buildChunks = new List<BuildChunk>();
+            var workChunks = new List<WorkChunk>();
 
-            if (UsingFacilities.Count == 0) return buildChunks;
+            if (UsingFacilities.Count == 0) return workChunks;
 
             var shipVariables = new Dictionary<string, double>
             {
@@ -76,9 +76,9 @@ namespace TimeToBuild
             {
                 if (!UsingFacilities.Contains(buildTime.Identifier.Facility)) continue;
 
-                var buildChunk = new BuildChunk(buildTime.Identifier);
-                buildChunk.Work = 0;
-                buildChunk.Overhead = 0;
+                var workChunk = new WorkChunk(buildTime.Identifier);
+                workChunk.Work = 0;
+                workChunk.Overhead = 0;
 
                 var facilityVariables = GetFacilityVariables();
                 facilityVariables["facility_level"] = GetFacilityLevel(buildTime.Identifier.Facility);
@@ -89,8 +89,8 @@ namespace TimeToBuild
                     {
                         if (!buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            workChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            workChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                         }
                     }
                 }
@@ -100,21 +100,21 @@ namespace TimeToBuild
                     {
                         if (buildPart.ReuseFromInventory)
                         {
-                            buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
-                            buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            workChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, partVariables[buildPart]);
+                            workChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, partVariables[buildPart]);
                         }
                     }
                 }
                 if (buildTime.WholeVessel)
                 {
-                    buildChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, shipVariables);
-                    buildChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, shipVariables);
+                    workChunk.Work += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Work, timeUnitVariables, facilityVariables, shipVariables);
+                    workChunk.Overhead += FormulaParser.ParseAndComputeFormula(buildTime.TimeFormula.Overhead, timeUnitVariables, facilityVariables, shipVariables);
                 }
 
-                if (buildChunk.Work > 0 || buildChunk.Overhead > 0) buildChunks.Add(buildChunk);
+                if (workChunk.Work > 0 || workChunk.Overhead > 0) workChunks.Add(workChunk);
             }
 
-            return buildChunks;
+            return workChunks;
         }
 
         public static List<BuildPart> GatherBuildParts(List<Part> parts)
@@ -165,69 +165,69 @@ namespace TimeToBuild
             return buildParts;
         }
 
-        public List<BuildChunk.BuildChunkDatum> GetBuildChunkData()
+        public List<WorkChunk.WorkChunkDatum> GetWorkChunkData()
         {
-            var buildChunkData = new List<BuildChunk.BuildChunkDatum>();
+            var workChunkData = new List<WorkChunk.WorkChunkDatum>();
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
             var numReusedParts = buildParts.Count(buildPart => buildPart.ReuseFromInventory);
 
-            var buildChunks = ComputeBuildChunks(buildParts);
+            var workChunks = ComputeWorkChunks(buildParts);
 
             var buildRates = LaunchScheduler.GetBuildRates();
 
-            foreach (var buildChunk in buildChunks)
+            foreach (var workChunk in workChunks)
             {
-                if (!TimeToBuild.Instance.Profile.BuildTimes.ContainsKey(buildChunk.Identifier)) continue;
+                if (!TimeToBuild.Instance.Profile.BuildTimes.ContainsKey(workChunk.Identifier)) continue;
 
-                var buildTimeConfig = TimeToBuild.Instance.Profile.BuildTimes[buildChunk.Identifier];
+                var buildTimeConfig = TimeToBuild.Instance.Profile.BuildTimes[workChunk.Identifier];
 
-                if (buildChunk.Work > 0 || buildChunk.Overhead > 0)
+                if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var buildChunkDatum = new BuildChunk.BuildChunkDatum();
-                    buildChunkDatum.Title = buildTimeConfig.Title;
+                    var workChunkDatum = new WorkChunk.WorkChunkDatum();
+                    workChunkDatum.Title = buildTimeConfig.Title;
 
-                    var rate = buildRates[buildChunk.Identifier];
-                    buildChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(buildChunk.Work / rate + buildChunk.Overhead));
-                    if (buildChunkDatum.Duration < 0) buildChunkDatum.Duration = 0;
-                    buildChunkDatum.Duration = LaunchScheduler.Calendar.RoundDuration(buildChunkDatum.Duration);
+                    var rate = buildRates[workChunk.Identifier];
+                    workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
+                    if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
+                    workChunkDatum.Duration = LaunchScheduler.Calendar.RoundDuration(workChunkDatum.Duration);
 
-                    if (buildTimeConfig.PerNewPart) buildChunkDatum.NewPartCount = numNewParts;
+                    if (buildTimeConfig.PerNewPart) workChunkDatum.NewPartCount = numNewParts;
 
-                    if (buildTimeConfig.PerReusedPart) buildChunkDatum.ReusedPartCount = numReusedParts;
+                    if (buildTimeConfig.PerReusedPart) workChunkDatum.ReusedPartCount = numReusedParts;
 
-                    buildChunkData.Add(buildChunkDatum);
+                    workChunkData.Add(workChunkDatum);
                 }
             }
 
-            return buildChunkData;
+            return workChunkData;
         }
 
         public void SpawnBuildDialog()
         {
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            var buildChunkData = GetBuildChunkData();
+            var workChunkData = GetWorkChunkData();
 
             var title = "";
             var totalBuildTime = 0;
-            foreach (var buildChunkDatum in buildChunkData)
+            foreach (var workChunkDatum in workChunkData)
             {
-                title += buildChunkDatum.Title;
+                title += workChunkDatum.Title;
 
-                totalBuildTime += buildChunkDatum.Duration;
+                totalBuildTime += workChunkDatum.Duration;
 
-                if (buildChunkDatum.NewPartCount > 0 || buildChunkDatum.ReusedPartCount > 0)
+                if (workChunkDatum.NewPartCount > 0 || workChunkDatum.ReusedPartCount > 0)
                 {
                     title += " (";
-                    if (buildChunkDatum.NewPartCount > 0) title += buildChunkDatum.NewPartCount.ToString() + " " + (buildChunkDatum.NewPartCount > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
-                    if (buildChunkDatum.NewPartCount > 0 && buildChunkDatum.ReusedPartCount > 0) title += ", ";
-                    if (buildChunkDatum.ReusedPartCount > 0) title += buildChunkDatum.ReusedPartCount.ToString() + " " + (buildChunkDatum.ReusedPartCount > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
+                    if (workChunkDatum.NewPartCount > 0) title += workChunkDatum.NewPartCount.ToString() + " " + (workChunkDatum.NewPartCount > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
+                    if (workChunkDatum.NewPartCount > 0 && workChunkDatum.ReusedPartCount > 0) title += ", ";
+                    if (workChunkDatum.ReusedPartCount > 0) title += workChunkDatum.ReusedPartCount.ToString() + " " + (workChunkDatum.ReusedPartCount > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
                     title += ")";
                 }
 
-                title += "\n" + LaunchScheduler.Calendar.GetDurationString(buildChunkDatum.Duration) + "\n\n";
+                title += "\n" + LaunchScheduler.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
             title += LocalizerCache.Total + "\n" + LaunchScheduler.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
@@ -323,12 +323,12 @@ namespace TimeToBuild
             return true;
         }
 
-        private bool TryStartBuild(List<BuildChunk> buildChunks, bool actuallyAddIt)
+        private bool TryStartBuild(List<WorkChunk> workChunks, bool actuallyAddIt)
         {
             var success = true;
             if (HighLogic.LoadedSceneIsEditor)
             {
-                var buildVessel = new BuildVessel(EditorLogic.fetch.ship, EditorLogic.fetch.launchSiteName, TimeToBuild.Instance.Scenario.EditorStartTime, buildChunks);
+                var buildVessel = new BuildVessel(EditorLogic.fetch.ship, EditorLogic.fetch.launchSiteName, TimeToBuild.Instance.Scenario.EditorStartTime, workChunks);
 
                 success = TryAddBuildVessel(buildVessel, actuallyAddIt);
 
@@ -341,9 +341,9 @@ namespace TimeToBuild
         public void OnStartBuild()
         {
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var buildChunks = ComputeBuildChunks(buildParts);
+            var workChunks = ComputeWorkChunks(buildParts);
 
-            if (TryStartBuild(buildChunks, true))
+            if (TryStartBuild(workChunks, true))
             {
                 var alarm = new AlarmTypeRaw();
                 alarm.ut = LaunchScheduler.LaunchTimeEarliest;
@@ -369,9 +369,9 @@ namespace TimeToBuild
             if (!HighLogic.LoadedSceneIsEditor) return;
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var buildChunks = ComputeBuildChunks(buildParts);
+            var workChunks = ComputeWorkChunks(buildParts);
 
-            if (TryStartBuild(buildChunks, false))
+            if (TryStartBuild(workChunks, false))
             {
                 LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeEarliest, EditorLogic.fetch.ship.shipName);
                 EditorLaunchVessel();
@@ -383,9 +383,9 @@ namespace TimeToBuild
             if (!HighLogic.LoadedSceneIsEditor) return;
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var buildChunks = ComputeBuildChunks(buildParts);
+            var workChunks = ComputeWorkChunks(buildParts);
 
-            if (TryStartBuild(buildChunks, false))
+            if (TryStartBuild(workChunks, false))
             {
                 LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, EditorLogic.fetch.ship.shipName);
                 EditorLaunchVessel();

@@ -14,18 +14,18 @@ namespace TimeToBuild
         [Persistent]
         public double WorkDone { get; private set; } = 0;
         [Persistent]
-        public List<BuildChunk> BuildChunks { get; private set; } = new List<BuildChunk>();
+        public List<WorkChunk> WorkChunks { get; private set; } = new List<WorkChunk>();
         [Persistent]
         public ShipConstruct ShipConstruct { get; private set; }
 
-        public BuildVessel(ShipConstruct shipConstruct, string launchSiteName, double startTime, List<BuildChunk> buildChunks)
+        public BuildVessel(ShipConstruct shipConstruct, string launchSiteName, double startTime, List<WorkChunk> workChunks)
         {
             LaunchSiteName = launchSiteName;
             ShipConstruct = shipConstruct;
             StartTime = startTime;
             LastUpdateTime = startTime;
             WorkDone = 0;
-            BuildChunks = buildChunks;
+            WorkChunks = workChunks;
         }
 
         public BuildVessel(ConfigNode node)
@@ -35,7 +35,7 @@ namespace TimeToBuild
             if (node.HasValue("LastUpdateTime")) LastUpdateTime = double.Parse(node.GetValue("LastUpdateTime"));
             if (node.HasValue("WorkDone")) WorkDone = double.Parse(node.GetValue("WorkDone"));
 
-            foreach (var buildChunkNode in node.GetNodes("BuildChunk")) BuildChunks.Add(new BuildChunk(buildChunkNode));
+            foreach (var workChunkNode in node.GetNodes("WorkChunk")) WorkChunks.Add(new WorkChunk(workChunkNode));
 
             ShipConstruct = new ShipConstruct();
             if (node.HasNode("ShipConstruct")) ShipConstruct.LoadShip(node.GetNode("ShipConstruct"));
@@ -50,9 +50,9 @@ namespace TimeToBuild
             node.AddValue("LastUpdateTime", LastUpdateTime);
             node.AddValue("WorkDone", WorkDone);
 
-            foreach (var buildChunkNode in BuildChunks)
+            foreach (var workChunkNode in WorkChunks)
             {
-                node.AddNode("BuildChunk", buildChunkNode.GetConfigNode());
+                node.AddNode("WorkChunk", workChunkNode.GetConfigNode());
             }
 
             if (!(ShipConstruct is null)) node.AddNode("ShipConstruct", ShipConstruct.SaveShip());
@@ -71,65 +71,65 @@ namespace TimeToBuild
             var workDoneOnPreviousChunks = 0.0;
             var mostRecentChunkCompletetionTime = StartTime;
             var chunkDone = false;
-            foreach (var buildChunk in BuildChunks)
+            foreach (var workChunk in WorkChunks)
             {
                 var workDoneOnThisChunk = 0.0;
 
-                chunkDone = buildChunk.CompletionTime > 0;
+                chunkDone = workChunk.CompletionTime > 0;
 
-                var workDoneByLastUpdate = buildChunk.Work;
+                var workDoneByLastUpdate = workChunk.Work;
                 var workDoneSinceLastUpdate = 0.0;
                 if (!chunkDone)
                 {
-                    // Build chunk not completed at last update
+                    // Work chunk not completed at last update
 
-                    var chunkWorkStartTime = mostRecentChunkCompletetionTime + buildChunk.Overhead;
+                    var chunkWorkStartTime = mostRecentChunkCompletetionTime + workChunk.Overhead;
                     if (chunkWorkStartTime > currentTime)
                     {
-                        // Build chunk still in constant overhead phase
+                        // Work chunk still in constant overhead phase
                         continue;
                     }
                     else
                     {
-                        // Build chunk has started variable rate work phase
+                        // Work chunk has started variable rate work phase
 
                         workDoneByLastUpdate = totalWorkDoneByLastUpdate - workDoneOnPreviousChunks;
                         var timeSinceLastUpdate = currentTime - LastUpdateTime;
-                        workDoneSinceLastUpdate = timeSinceLastUpdate * buildRates[buildChunk.Identifier];
+                        workDoneSinceLastUpdate = timeSinceLastUpdate * buildRates[workChunk.Identifier];
                         workDoneOnThisChunk = workDoneByLastUpdate + workDoneSinceLastUpdate;
-                        chunkDone = workDoneOnThisChunk > buildChunk.Work;
+                        chunkDone = workDoneOnThisChunk > workChunk.Work;
                     }
                 }
 
-                if (chunkDone) workDoneOnThisChunk = buildChunk.Work;
+                if (chunkDone) workDoneOnThisChunk = workChunk.Work;
 
                 workDoneSinceLastUpdate = workDoneOnThisChunk - workDoneByLastUpdate;
 
                 WorkDone += workDoneOnThisChunk;
 
-                var timeSpentOnChunkSinceLastUpdate = buildChunk.Overhead + workDoneSinceLastUpdate / buildRates[buildChunk.Identifier];
+                var timeSpentOnChunkSinceLastUpdate = workChunk.Overhead + workDoneSinceLastUpdate / buildRates[workChunk.Identifier];
 
                 if (chunkDone)
                 {
-                    // Build chunk completed by current time
+                    // Work chunk completed by current time
 
-                    if (buildChunk.CompletionTime < 0)
+                    if (workChunk.CompletionTime < 0)
                     {
-                        buildChunk.CompletionTime = LastUpdateTime + timeSpentOnChunkSinceLastUpdate;
+                        workChunk.CompletionTime = LastUpdateTime + timeSpentOnChunkSinceLastUpdate;
                     }
 
-                    mostRecentChunkCompletetionTime = buildChunk.CompletionTime;
-                    workDoneOnPreviousChunks += buildChunk.Work;
+                    mostRecentChunkCompletetionTime = workChunk.CompletionTime;
+                    workDoneOnPreviousChunks += workChunk.Work;
 
                     if (workDoneOnPreviousChunks > totalWorkDoneByLastUpdate)
                     {
-                        LastUpdateTime = buildChunk.CompletionTime;
+                        LastUpdateTime = workChunk.CompletionTime;
                         totalWorkDoneByLastUpdate = workDoneOnPreviousChunks;
                     }
                 }
                 else
                 {
-                    // Build chunk in progress, stop processing here
+                    // Work chunk in progress, stop processing here
                     LastUpdateTime = currentTime;
                     break;
                 }

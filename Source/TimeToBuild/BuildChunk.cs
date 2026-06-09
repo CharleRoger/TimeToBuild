@@ -2,19 +2,19 @@
 
 namespace TimeToBuild
 {
-    public class BuildChunk
+    public class WorkChunk
     {
         public BuildTimeIdentifier Identifier { get; private set; }
         public double Work = 0;
         public double Overhead = 0;
         public double CompletionTime = -1;
 
-        public BuildChunk(BuildTimeIdentifier identifier)
+        public WorkChunk(BuildTimeIdentifier identifier)
         {
             Identifier = identifier;
         }
 
-        public BuildChunk(ConfigNode node)
+        public WorkChunk(ConfigNode node)
         {
             var identifier = new BuildTimeIdentifier();
             if (node.HasValue("name")) identifier.Name = node.GetValue("name");
@@ -73,7 +73,7 @@ namespace TimeToBuild
             return node;
         }
 
-        public struct BuildChunkDatum
+        public struct WorkChunkDatum
         {
             public string Title;
             public int Duration;
