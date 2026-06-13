@@ -1,6 +1,6 @@
 ﻿namespace TimeToBuild
 {
-    public class BuildVessel
+    public class WorkVessel
     {
         public struct BuildPart
         {
@@ -26,13 +26,13 @@
         [Persistent]
         public ShipConstruct ShipConstruct { get; private set; }
 
-        public BuildVessel(string launchSiteName, ShipConstruct shipConstruct)
+        public WorkVessel(string launchSiteName, ShipConstruct shipConstruct)
         {
             LaunchSiteName = launchSiteName;
             ShipConstruct = shipConstruct;
         }
 
-        public BuildVessel(ConfigNode node)
+        public WorkVessel(ConfigNode node)
         {
             if (node.HasValue("LaunchSiteName")) LaunchSiteName = node.GetValue("LaunchSiteName");
 

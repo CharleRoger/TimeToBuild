@@ -31,9 +31,9 @@ namespace TimeToBuild
 
         public void Save(ConfigNode node)
         {
-            foreach (var buildVessel in WorkLoads)
+            foreach (var workLoad in WorkLoads)
             {
-                node.AddNode("WorkLoad", buildVessel.GetConfigNode());
+                node.AddNode("WorkLoad", workLoad.GetConfigNode());
             }
         }
 

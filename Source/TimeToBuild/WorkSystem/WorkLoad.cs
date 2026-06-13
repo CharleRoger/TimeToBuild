@@ -14,7 +14,7 @@ namespace TimeToBuild
         [Persistent]
         public List<WorkChunk> WorkChunks { get; private set; } = new List<WorkChunk>();
         [Persistent]
-        public BuildVessel BuildVessel { get; private set; } = null;
+        public WorkVessel WorkVessel { get; private set; } = null;
 
         public WorkLoad(double startTime, List<WorkChunk> workChunks)
         {
@@ -24,9 +24,9 @@ namespace TimeToBuild
             WorkChunks = workChunks;
         }
 
-        public WorkLoad(double startTime, List<WorkChunk> workChunks, BuildVessel buildVessel) : this(startTime, workChunks)
+        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkVessel workVessel) : this(startTime, workChunks)
         {
-            BuildVessel = buildVessel;
+            WorkVessel = workVessel;
         }
 
         public WorkLoad(ConfigNode node)
@@ -37,7 +37,7 @@ namespace TimeToBuild
 
             foreach (var workChunkNode in node.GetNodes("WorkChunk")) WorkChunks.Add(new WorkChunk(workChunkNode));
 
-            if (node.HasNode("BuildVessel")) BuildVessel = new BuildVessel(node.GetNode("BuildVessel"));
+            if (node.HasNode("WorkVessel")) WorkVessel = new WorkVessel(node.GetNode("WorkVessel"));
         }
 
         public ConfigNode GetConfigNode()
@@ -53,9 +53,9 @@ namespace TimeToBuild
                 node.AddNode("WorkChunk", workChunkNode.GetConfigNode());
             }
 
-            if (BuildVessel != null)
+            if (WorkVessel != null)
             {
-                node.AddNode("BuildVessel", BuildVessel.GetConfigNode());
+                node.AddNode("WorkVessel", WorkVessel.GetConfigNode());
             }
 
             return node;
