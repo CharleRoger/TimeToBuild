@@ -1,6 +1,12 @@
 ﻿namespace TimeToBuild
 {
-    public class WorkVessel
+    public abstract class Work
+    {
+        public abstract ConfigNode Save();
+        public abstract void Load(ConfigNode node);
+    }
+
+    public class WorkVessel : Work
     {
         public struct BuildPart
         {
@@ -32,15 +38,7 @@
             ShipConstruct = shipConstruct;
         }
 
-        public WorkVessel(ConfigNode node)
-        {
-            if (node.HasValue("LaunchSiteName")) LaunchSiteName = node.GetValue("LaunchSiteName");
-
-            ShipConstruct = new ShipConstruct();
-            if (node.HasNode("ShipConstruct")) ShipConstruct.LoadShip(node.GetNode("ShipConstruct"));
-        }
-
-        public ConfigNode GetConfigNode()
+        public override ConfigNode Save()
         {
             ConfigNode node = new ConfigNode();
 
@@ -49,6 +47,19 @@
             if (!(ShipConstruct is null)) node.AddNode("ShipConstruct", ShipConstruct.SaveShip());
 
             return node;
+        }
+
+        public override void Load(ConfigNode node)
+        {
+            if (node.HasValue("LaunchSiteName")) LaunchSiteName = node.GetValue("LaunchSiteName");
+
+            ShipConstruct = new ShipConstruct();
+            if (node.HasNode("ShipConstruct")) ShipConstruct.LoadShip(node.GetNode("ShipConstruct"));
+        }
+
+        public WorkVessel(ConfigNode node)
+        {
+            Load(node);
         }
     }
 }

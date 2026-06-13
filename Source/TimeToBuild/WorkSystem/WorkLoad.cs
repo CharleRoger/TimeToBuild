@@ -55,7 +55,7 @@ namespace TimeToBuild
 
             if (WorkVessel != null)
             {
-                node.AddNode("WorkVessel", WorkVessel.GetConfigNode());
+                node.AddNode("WorkVessel", WorkVessel.Save());
             }
 
             return node;
