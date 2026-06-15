@@ -5,6 +5,14 @@ namespace TimeToBuild.Work
 {
     public class WorkChunk
     {
+        public struct WorkChunkDatum
+        {
+            public string Title;
+            public int Duration;
+            public int NewPartCount;
+            public int ReusedPartCount;
+        }
+
         public WorkTimeIdentifier Identifier { get; private set; }
         public double Work = 0;
         public double Overhead = 0;

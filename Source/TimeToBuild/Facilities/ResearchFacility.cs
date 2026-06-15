@@ -76,9 +76,9 @@ namespace TimeToBuild.Facilities
             return workChunks;
         }
 
-        public List<WorkItemVessel.WorkChunkDatum> GetTechWorkChunkData()
+        public List<WorkChunk.WorkChunkDatum> GetTechWorkChunkData()
         {
-            var workChunkData = new List<WorkItemVessel.WorkChunkDatum>();
+            var workChunkData = new List<WorkChunk.WorkChunkDatum>();
 
             var workChunks = ComputeResearchWorkChunks();
 
@@ -92,7 +92,7 @@ namespace TimeToBuild.Facilities
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var workChunkDatum = new WorkItemVessel.WorkChunkDatum();
+                    var workChunkDatum = new WorkChunk.WorkChunkDatum();
                     workChunkDatum.Title = researchTimeConfig.Title;
 
                     var rate = workRates[workChunk.Identifier];

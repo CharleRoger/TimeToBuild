@@ -148,9 +148,9 @@ namespace TimeToBuild.Facilities
             return buildParts;
         }
 
-        public List<WorkItemVessel.WorkChunkDatum> GetVesselWorkChunkData()
+        public List<WorkChunk.WorkChunkDatum> GetVesselWorkChunkData()
         {
-            var workChunkData = new List<WorkItemVessel.WorkChunkDatum>();
+            var workChunkData = new List<WorkChunk.WorkChunkDatum>();
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
@@ -168,7 +168,7 @@ namespace TimeToBuild.Facilities
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var workChunkDatum = new WorkItemVessel.WorkChunkDatum();
+                    var workChunkDatum = new WorkChunk.WorkChunkDatum();
                     workChunkDatum.Title = buildTimeConfig.Title;
 
                     var rate = workRates[workChunk.Identifier];

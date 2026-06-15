@@ -13,14 +13,6 @@
             public int NumBuilds;
         }
 
-        public struct WorkChunkDatum
-        {
-            public string Title;
-            public int Duration;
-            public int NewPartCount;
-            public int ReusedPartCount;
-        }
-
         [Persistent]
         public string LaunchSiteName { get; private set; } = "";
         [Persistent]
