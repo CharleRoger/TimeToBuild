@@ -58,9 +58,9 @@ namespace TimeToBuild
             GameEvents.onGameStateSave.Remove(OnSave);
         }
 
-        public Dictionary<WorkTime.WorkTimeIdentifier, double> GetBuildRates()
+        public Dictionary<WorkTime.WorkTimeIdentifier, double> GetWorkRates()
         {
-            var buildRates = new Dictionary<WorkTime.WorkTimeIdentifier, double>();
+            var workRates = new Dictionary<WorkTime.WorkTimeIdentifier, double>();
 
             var timeUnitVariables = Calendar.GetTimeUnitVariables();
             var facilityVariables = GetFacilityVariables();
@@ -71,10 +71,21 @@ namespace TimeToBuild
 
                 var facilityVariable = new Dictionary<string, double>();
                 facilityVariable["facility_level"] = GetFacilityLevel(buildTime.Key.Facility);
-                buildRates[buildTime.Key] = FormulaParser.ParseAndComputeFormula(buildTime.Value.TimeFormula.Rate, timeUnitVariables, facilityVariables, facilityVariable);
+                workRates[buildTime.Key] = FormulaParser.ParseAndComputeFormula(buildTime.Value.TimeFormula.Rate, timeUnitVariables, facilityVariables, facilityVariable);
             }
 
-            return buildRates;
+            facilityVariables = GetFacilityVariables();
+
+            foreach (var researchTime in Profile.ResearchTimes)
+            {
+                var facility = researchTime.Key.Facility;
+
+                var facilityVariable = new Dictionary<string, double>();
+                facilityVariable["facility_level"] = GetFacilityLevel(researchTime.Key.Facility);
+                workRates[researchTime.Key] = FormulaParser.ParseAndComputeFormula(researchTime.Value.TimeFormula.Rate, timeUnitVariables, facilityVariables, facilityVariable);
+            }
+
+            return workRates;
         }
     }
 }

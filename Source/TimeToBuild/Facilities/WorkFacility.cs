@@ -37,11 +37,11 @@ namespace TimeToBuild
             }
         }
 
-        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
+        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> workRates)
         {
             var workLoad = WorkLoads[workLoadIndex];
 
-            bool workComplete = workLoad.UpdateWorkDone(buildRates);
+            bool workComplete = workLoad.UpdateWorkDone(workRates);
 
             if (workComplete)
             {
@@ -59,11 +59,11 @@ namespace TimeToBuild
 
             while (true)
             {
-                var buildRates = TimeToBuild.Instance.GetBuildRates();
+                var workRates = TimeToBuild.Instance.GetWorkRates();
 
                 for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
                 {
-                    UpdateWorkLoad(workLoadIndex, buildRates);
+                    UpdateWorkLoad(workLoadIndex, workRates);
                 }
 
                 yield return new WaitForFixedUpdate();

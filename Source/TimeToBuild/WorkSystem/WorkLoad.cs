@@ -61,7 +61,7 @@ namespace TimeToBuild
             return node;
         }
 
-        public bool UpdateWorkDone(Dictionary<WorkTime.WorkTimeIdentifier, double> buildRates)
+        public bool UpdateWorkDone(Dictionary<WorkTime.WorkTimeIdentifier, double> workRates)
         {
             if (HighLogic.LoadedSceneIsEditor) return false;
 
@@ -96,7 +96,7 @@ namespace TimeToBuild
 
                         workDoneByLastUpdate = totalWorkDoneByLastUpdate - workDoneOnPreviousChunks;
                         var timeSinceLastUpdate = currentTime - LastUpdateTime;
-                        workDoneSinceLastUpdate = timeSinceLastUpdate * buildRates[workChunk.Identifier];
+                        workDoneSinceLastUpdate = timeSinceLastUpdate * workRates[workChunk.Identifier];
                         workDoneOnThisChunk = workDoneByLastUpdate + workDoneSinceLastUpdate;
                         chunkDone = workDoneOnThisChunk > workChunk.Work;
                     }
@@ -108,7 +108,7 @@ namespace TimeToBuild
 
                 WorkDone += workDoneOnThisChunk;
 
-                var timeSpentOnChunkSinceLastUpdate = workChunk.Overhead + workDoneSinceLastUpdate / buildRates[workChunk.Identifier];
+                var timeSpentOnChunkSinceLastUpdate = workChunk.Overhead + workDoneSinceLastUpdate / workRates[workChunk.Identifier];
 
                 if (chunkDone)
                 {

@@ -17,11 +17,10 @@ namespace TimeToBuild
 
         public override void OnWorkLoadComplete(WorkLoad workLoad)
         {
-            if (!(workLoad.WorkVessel is null))
-            {
-                WorkVesselToLaunch = workLoad.WorkVessel;
-                SpawnLaunchDialog();
-            }
+            if (workLoad.WorkVessel is null) return;
+
+            WorkVesselToLaunch = workLoad.WorkVessel;
+            SpawnLaunchDialog();
         }
 
         public List<WorkChunk> ComputeBuildWorkChunks(List<WorkVessel.BuildPart> buildParts)
@@ -156,7 +155,7 @@ namespace TimeToBuild
 
             var workChunks = ComputeBuildWorkChunks(buildParts);
 
-            var buildRates = TimeToBuild.Instance.GetBuildRates();
+            var workRates = TimeToBuild.Instance.GetWorkRates();
 
             foreach (var workChunk in workChunks)
             {
@@ -169,7 +168,7 @@ namespace TimeToBuild
                     var workChunkDatum = new WorkVessel.WorkChunkDatum();
                     workChunkDatum.Title = buildTimeConfig.Title;
 
-                    var rate = buildRates[workChunk.Identifier];
+                    var rate = workRates[workChunk.Identifier];
                     workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
                     if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
                     workChunkDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
@@ -262,15 +261,13 @@ namespace TimeToBuild
 
         private bool TryStartBuild(List<WorkChunk> workChunks, bool actuallyAddIt)
         {
-            var success = true;
-            if (HighLogic.LoadedSceneIsEditor)
-            {
-                var workVessel = new WorkVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
-                var workLoad = new WorkLoad(TimeToBuild.Instance.Scenario.EditorStartTime, workChunks, workVessel);
-                success = TryAddWorkLoad(workLoad, actuallyAddIt);
+            if (!HighLogic.LoadedSceneIsEditor) return false;
 
-                if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.FacilityBusy);
-            }
+            var workVessel = new WorkVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
+            var workLoad = new WorkLoad(TimeToBuild.Instance.Scenario.EditorStartTime, workChunks, workVessel);
+            var success = TryAddWorkLoad(workLoad, actuallyAddIt);
+
+            if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.BuildFacilityBusy);
 
             return success;
         }
