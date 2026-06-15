@@ -20,16 +20,18 @@ namespace TimeToBuild.Facilities
 
         }
 
-        private void UnlockTech(string techID)
+        public override void OnWorkLoadComplete(WorkLoad workLoad)
         {
-            var protoTechNode = AssetBase.RnDTechTree.FindTech(techID);
+            if (workLoad.Tech is null) return;
+
+            var protoTechNode = AssetBase.RnDTechTree.FindTech(workLoad.Tech.TechID);
             ResearchAndDevelopment.Instance.UnlockProtoTechNode(protoTechNode);
 
             if (!(RDController.Instance is null))
             {
                 foreach (var rdNode in RDController.Instance.nodes)
                 {
-                    if (rdNode.tech.techID == techID)
+                    if (rdNode.tech.techID == workLoad.Tech.TechID)
                     {
                         rdNode.UpdateGraphics();
                         break;
@@ -39,18 +41,9 @@ namespace TimeToBuild.Facilities
                 RDController.Instance.UpdatePanel();
                 RDController.Instance.partList.Refresh();
             }
-
-            SpawnResearchCompleteDialog(techID);
         }
 
-        public override void OnWorkLoadComplete(WorkLoad workLoad)
-        {
-            if (workLoad.Tech is null) return;
-
-            UnlockTech(workLoad.Tech.TechID);
-        }
-
-        public List<WorkChunk> ComputeResearchWorkChunks()
+        public override List<WorkChunk> ComputeWorkChunks()
         {
             var workChunks = new List<WorkChunk>();
 
@@ -76,11 +69,11 @@ namespace TimeToBuild.Facilities
             return workChunks;
         }
 
-        public List<WorkChunk.WorkChunkDatum> GetTechWorkChunkData()
+        public override List<WorkChunk.WorkChunkDatum> GetWorkChunkData()
         {
             var workChunkData = new List<WorkChunk.WorkChunkDatum>();
 
-            var workChunks = ComputeResearchWorkChunks();
+            var workChunks = ComputeWorkChunks();
 
             var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
@@ -107,36 +100,6 @@ namespace TimeToBuild.Facilities
             return workChunkData;
         }
 
-        public void SpawnResearchDialog()
-        {
-            if (HighLogic.LoadedScene != GameScenes.SPACECENTER) return;
-
-            if (TechNodeToResearch is null) return;
-
-            var workChunkData = GetTechWorkChunkData();
-
-            var title = "";
-            var totalResearchime = 0;
-            foreach (var workChunkDatum in workChunkData)
-            {
-                title += workChunkDatum.Title;
-
-                totalResearchime += workChunkDatum.Duration;
-
-                title += "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
-            }
-            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(totalResearchime) + "\n\n";
-
-            var completionDate = CurrentTime + totalResearchime;
-
-            var message = "";
-            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(completionDate)) message += TimeToBuildManager.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
-
-            var optionStartResearch = GetBuildDialogButton(LocalizerCache.StartResearch, OnStartResearch);
-
-            SpawnMultiOptionDialog(title, message, optionStartResearch);
-        }
-
         private bool TryStartResearch(List<WorkChunk> workChunks, bool actuallyAddIt)
         {
             if (HighLogic.LoadedScene != GameScenes.SPACECENTER) return false;
@@ -157,13 +120,12 @@ namespace TimeToBuild.Facilities
             return techNode is null ? techID : techNode.GetValue("title");
         }
 
-        public void OnStartResearch()
+        public override void OnStartWork()
         {
             if (TechNodeToResearch is null) return;
 
-            var workChunks = ComputeResearchWorkChunks();
-
-            var workChunkData = GetTechWorkChunkData();
+            var workChunks = ComputeWorkChunks();
+            var workChunkData = GetWorkChunkData();
 
             var completionTime = CurrentTime;
             foreach (var workChunkDatum in workChunkData) completionTime += workChunkDatum.Duration;
@@ -183,9 +145,20 @@ namespace TimeToBuild.Facilities
             }
         }
 
-        public void SpawnResearchCompleteDialog(string techID)
+        public override DialogGUIButton[] GetStartWorkDialogButtons()
         {
-            SpawnMultiOptionDialog(LocalizerCache.ResearchComplete, GetTechTitle(techID) + " " + LocalizerCache.NowAvailable);
+            return new DialogGUIButton[1]
+            {
+                GetBuildDialogButton(LocalizerCache.StartResearch, OnStartWork)
+            };
+        }
+
+        public override void SpawnWorkCompleteDialog(WorkItem workItem)
+        {
+            var tech = (WorkItemTech)workItem;
+            if (tech is null) return;
+
+            SpawnMultiOptionDialog(LocalizerCache.ResearchComplete, GetTechTitle(tech.TechID) + " " + LocalizerCache.NowAvailable);
         }
 
         public RDTech.OperationResult TryStartResearch(RDNode rdNode)
@@ -218,7 +191,7 @@ namespace TimeToBuild.Facilities
             else if (!(RDController.Instance is null))
             {
                 TechNodeToResearch = AssetBase.RnDTechTree.FindTech(rdNode.tech.techID);
-                SpawnResearchDialog();
+                SpawnStartWorkDialog();
             }
 
             GameEvents.OnTechnologyResearched.Fire(new GameEvents.HostTargetAction<RDTech, RDTech.OperationResult>(rdNode.tech, operationResult));

@@ -62,7 +62,7 @@ namespace TimeToBuild.Core
             if (EditorDriver.editorFacility == EditorFacility.SPH) buildFacility = Scenario.BuildFacilitySPH;
             if (buildFacility is null) return;
 
-            buildFacility.SpawnBuildDialog();
+            buildFacility.SpawnStartWorkDialog();
         }
     }
 }

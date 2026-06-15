@@ -10,6 +10,7 @@ namespace TimeToBuild.Facilities
 {
     public class BuildFacility : WorkFacility
     {
+        private List<WorkItemVessel.BuildPart> PartsToBuild = new List<WorkItemVessel.BuildPart>();
         private WorkItemVessel VesselToLaunch = null;
         private LaunchScheduler LaunchScheduler => TimeToBuildManager.Instance.LaunchScheduler;
 
@@ -23,10 +24,9 @@ namespace TimeToBuild.Facilities
             if (workLoad.Vessel is null) return;
 
             VesselToLaunch = workLoad.Vessel;
-            SpawnLaunchDialog();
         }
 
-        public List<WorkChunk> ComputeBuildWorkChunks(List<WorkItemVessel.BuildPart> buildParts)
+        public override List<WorkChunk> ComputeWorkChunks()
         {
             var workChunks = new List<WorkChunk>();
 
@@ -38,11 +38,11 @@ namespace TimeToBuild.Facilities
                 { VariableWetMass, 0 },
                 { VariableDryCost, 0 },
                 { VariableWetCost, 0 },
-                { VariableNumParts, buildParts.Count }
+                { VariableNumParts, PartsToBuild.Count }
             };
 
             var partVariables = new Dictionary<WorkItemVessel.BuildPart, Dictionary<string, double>>();
-            foreach (var buildPart in buildParts)
+            foreach (var buildPart in PartsToBuild)
             {
                 var variables = GetPartVariables(buildPart);
                 partVariables[buildPart] = variables;
@@ -68,7 +68,7 @@ namespace TimeToBuild.Facilities
 
                 if (buildTime.PerNewPart)
                 {
-                    foreach (var buildPart in buildParts)
+                    foreach (var buildPart in PartsToBuild)
                     {
                         if (!buildPart.ReuseFromInventory)
                         {
@@ -79,7 +79,7 @@ namespace TimeToBuild.Facilities
                 }
                 if (buildTime.PerReusedPart)
                 {
-                    foreach (var buildPart in buildParts)
+                    foreach (var buildPart in PartsToBuild)
                     {
                         if (buildPart.ReuseFromInventory)
                         {
@@ -148,15 +148,15 @@ namespace TimeToBuild.Facilities
             return buildParts;
         }
 
-        public List<WorkChunk.WorkChunkDatum> GetVesselWorkChunkData()
+        public override List<WorkChunk.WorkChunkDatum> GetWorkChunkData()
         {
             var workChunkData = new List<WorkChunk.WorkChunkDatum>();
 
-            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
-            var numReusedParts = buildParts.Count(buildPart => buildPart.ReuseFromInventory);
+            PartsToBuild = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var numNewParts = PartsToBuild.Count(buildPart => !buildPart.ReuseFromInventory);
+            var numReusedParts = PartsToBuild.Count(buildPart => buildPart.ReuseFromInventory);
 
-            var workChunks = ComputeBuildWorkChunks(buildParts);
+            var workChunks = ComputeWorkChunks();
 
             var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
@@ -187,53 +187,24 @@ namespace TimeToBuild.Facilities
             return workChunkData;
         }
 
-        public void SpawnBuildDialog()
+        protected override void SetTotalWorkDuration(double workDuration)
         {
-            if (!HighLogic.LoadedSceneIsEditor) return;
+            base.SetTotalWorkDuration(workDuration);
 
-            var workChunkData = GetVesselWorkChunkData();
-
-            var title = "";
-            var totalBuildTime = 0;
-            foreach (var workChunkDatum in workChunkData)
-            {
-                title += workChunkDatum.Title;
-
-                totalBuildTime += workChunkDatum.Duration;
-
-                if (workChunkDatum.NewPartCount > 0 || workChunkDatum.ReusedPartCount > 0)
-                {
-                    title += " (";
-                    if (workChunkDatum.NewPartCount > 0) title += workChunkDatum.NewPartCount.ToString() + " " + (workChunkDatum.NewPartCount > 1 ? LocalizerCache.NewParts : LocalizerCache.NewPart);
-                    if (workChunkDatum.NewPartCount > 0 && workChunkDatum.ReusedPartCount > 0) title += ", ";
-                    if (workChunkDatum.ReusedPartCount > 0) title += workChunkDatum.ReusedPartCount.ToString() + " " + (workChunkDatum.ReusedPartCount > 1 ? LocalizerCache.ReusedParts : LocalizerCache.ReusedPart);
-                    title += ")";
-                }
-
-                title += "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
-            }
-            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
-
-            LaunchScheduler.LaunchTimeEarliest = CurrentTime + totalBuildTime;
-
-            var message = "";
-            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(LaunchScheduler.LaunchTimeNextMorning)) message += TimeToBuildManager.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
-
-            var optionStartBuild = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
-            var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnEditorLaunchNextMorning, LaunchScheduler.LaunchTimeNextMorning);
-
-            SpawnMultiOptionDialog(title, message, optionStartBuild, optionWarpToEarliestLaunch, optionWarpToNextMorning);
+            LaunchScheduler.LaunchTimeEarliest = CompletionTime;
         }
 
-        public void SpawnLaunchDialog()
+        public override void SpawnWorkCompleteDialog(WorkItem workItem)
         {
+            var vessel = (WorkItemVessel)workItem;
+            if (vessel is null) return;
+
             LaunchScheduler.LaunchTimeEarliest = CurrentTime;
 
             var optionLaunchNow = GetBuildDialogButton(LocalizerCache.LaunchNow, LaunchVesselNow, CurrentTime);
             var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchVesselNextMorning, LaunchScheduler.LaunchTimeNextMorning);
             
-            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, VesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
+            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, vessel.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
         private void LaunchVessel()
@@ -275,10 +246,10 @@ namespace TimeToBuild.Facilities
             return success;
         }
 
-        public void OnStartBuild()
+        public override void OnStartWork()
         {
-            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeBuildWorkChunks(buildParts);
+            PartsToBuild = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var workChunks = ComputeWorkChunks();
 
             if (TryStartBuild(workChunks, true))
             {
@@ -305,8 +276,8 @@ namespace TimeToBuild.Facilities
         {
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeBuildWorkChunks(buildParts);
+            PartsToBuild = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var workChunks = ComputeWorkChunks();
 
             if (TryStartBuild(workChunks, false))
             {
@@ -319,14 +290,24 @@ namespace TimeToBuild.Facilities
         {
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
-            var workChunks = ComputeBuildWorkChunks(buildParts);
+            PartsToBuild = GatherBuildParts(EditorLogic.fetch.ship.parts);
+            var workChunks = ComputeWorkChunks();
 
             if (TryStartBuild(workChunks, false))
             {
                 LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, EditorLogic.fetch.ship.shipName);
                 EditorLaunchVessel();
             }
+        }
+
+        public override DialogGUIButton[] GetStartWorkDialogButtons()
+        {
+            return new DialogGUIButton[3]
+            {
+                GetBuildDialogButton(LocalizerCache.StartBuild, OnStartWork),
+                GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest),
+                GetBuildDialogButton(LocalizerCache.WarpToNextMorning, OnEditorLaunchNextMorning, LaunchScheduler.LaunchTimeNextMorning)
+            };
         }
     }
 }
