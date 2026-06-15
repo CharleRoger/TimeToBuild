@@ -14,9 +14,9 @@ namespace TimeToBuild
         [Persistent]
         public List<WorkChunk> WorkChunks { get; private set; } = new List<WorkChunk>();
         [Persistent]
-        public WorkVessel WorkVessel { get; private set; } = null;
+        public WorkItemVessel Vessel { get; private set; } = null;
         [Persistent]
-        public WorkTech WorkTech { get; private set; } = null;
+        public WorkItemTech Tech { get; private set; } = null;
 
         public WorkLoad(double startTime, List<WorkChunk> workChunks)
         {
@@ -26,14 +26,14 @@ namespace TimeToBuild
             WorkChunks = workChunks;
         }
 
-        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkVessel workVessel) : this(startTime, workChunks)
+        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkItemVessel vessel) : this(startTime, workChunks)
         {
-            WorkVessel = workVessel;
+            Vessel = vessel;
         }
 
-        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkTech workTech) : this(startTime, workChunks)
+        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkItemTech tech) : this(startTime, workChunks)
         {
-            WorkTech = workTech;
+            Tech = tech;
         }
 
         public WorkLoad(ConfigNode node)
@@ -44,9 +44,9 @@ namespace TimeToBuild
 
             foreach (var workChunkNode in node.GetNodes("WorkChunk")) WorkChunks.Add(new WorkChunk(workChunkNode));
 
-            if (node.HasNode("WorkVessel")) WorkVessel = new WorkVessel(node.GetNode("WorkVessel"));
+            if (node.HasNode("WorkItemVessel")) Vessel = new WorkItemVessel(node.GetNode("WorkItemVessel"));
             
-            if (node.HasNode("WorkTech")) WorkTech = new WorkTech(node.GetNode("WorkTech"));
+            if (node.HasNode("WorkItemTech")) Tech = new WorkItemTech(node.GetNode("WorkItemTech"));
         }
 
         public ConfigNode GetConfigNode()
@@ -62,14 +62,14 @@ namespace TimeToBuild
                 node.AddNode("WorkChunk", workChunkNode.GetConfigNode());
             }
 
-            if (WorkVessel != null)
+            if (Vessel != null)
             {
-                node.AddNode("WorkVessel", WorkVessel.Save());
+                node.AddNode("WorkItemVessel", Vessel.Save());
             }
 
-            if (WorkTech != null)
+            if (Tech != null)
             {
-                node.AddNode("WorkTech", WorkTech.Save());
+                node.AddNode("WorkItemTech", Tech.Save());
             }
 
             return node;

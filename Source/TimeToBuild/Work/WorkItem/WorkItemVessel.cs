@@ -1,12 +1,6 @@
 ﻿namespace TimeToBuild
 {
-    public abstract class Work
-    {
-        public abstract ConfigNode Save();
-        public abstract void Load(ConfigNode node);
-    }
-
-    public class WorkVessel : Work
+    public class WorkItemVessel : WorkItem
     {
         public struct BuildPart
         {
@@ -32,7 +26,7 @@
         [Persistent]
         public ShipConstruct ShipConstruct { get; private set; }
 
-        public WorkVessel(string launchSiteName, ShipConstruct shipConstruct)
+        public WorkItemVessel(string launchSiteName, ShipConstruct shipConstruct)
         {
             LaunchSiteName = launchSiteName;
             ShipConstruct = shipConstruct;
@@ -57,37 +51,7 @@
             if (node.HasNode("ShipConstruct")) ShipConstruct.LoadShip(node.GetNode("ShipConstruct"));
         }
 
-        public WorkVessel(ConfigNode node)
-        {
-            Load(node);
-        }
-    }
-
-    public class WorkTech : Work
-    {
-        [Persistent]
-        public string TechID { get; private set; } = "";
-
-        public WorkTech(string techID)
-        {
-            TechID = techID;
-        }
-
-        public override ConfigNode Save()
-        {
-            ConfigNode node = new ConfigNode();
-
-            node.AddValue("TechID", TechID);
-
-            return node;
-        }
-
-        public override void Load(ConfigNode node)
-        {
-            if (node.HasValue("TechID")) TechID = node.GetValue("TechID");
-        }
-
-        public WorkTech(ConfigNode node)
+        public WorkItemVessel(ConfigNode node)
         {
             Load(node);
         }

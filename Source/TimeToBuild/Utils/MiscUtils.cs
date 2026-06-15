@@ -40,7 +40,7 @@ namespace TimeToBuild
             return variables;
         }
 
-        public static Dictionary<string, double> GetPartVariables(WorkVessel.BuildPart buildPart)
+        public static Dictionary<string, double> GetPartVariables(WorkItemVessel.BuildPart buildPart)
         {
             var variables = new Dictionary<string, double>();
 

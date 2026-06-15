@@ -7,7 +7,7 @@ namespace TimeToBuild
 {
     public class BuildFacility : WorkFacility
     {
-        private WorkVessel WorkVesselToLaunch = null;
+        private WorkItemVessel VesselToLaunch = null;
         private LaunchScheduler LaunchScheduler => TimeToBuild.Instance.LaunchScheduler;
 
         public BuildFacility(SpaceCenterFacility facility) : base(facility)
@@ -17,13 +17,13 @@ namespace TimeToBuild
 
         public override void OnWorkLoadComplete(WorkLoad workLoad)
         {
-            if (workLoad.WorkVessel is null) return;
+            if (workLoad.Vessel is null) return;
 
-            WorkVesselToLaunch = workLoad.WorkVessel;
+            VesselToLaunch = workLoad.Vessel;
             SpawnLaunchDialog();
         }
 
-        public List<WorkChunk> ComputeBuildWorkChunks(List<WorkVessel.BuildPart> buildParts)
+        public List<WorkChunk> ComputeBuildWorkChunks(List<WorkItemVessel.BuildPart> buildParts)
         {
             var workChunks = new List<WorkChunk>();
 
@@ -38,7 +38,7 @@ namespace TimeToBuild
                 { VariableNumParts, buildParts.Count }
             };
 
-            var partVariables = new Dictionary<WorkVessel.BuildPart, Dictionary<string, double>>();
+            var partVariables = new Dictionary<WorkItemVessel.BuildPart, Dictionary<string, double>>();
             foreach (var buildPart in buildParts)
             {
                 var variables = GetPartVariables(buildPart);
@@ -97,9 +97,9 @@ namespace TimeToBuild
             return workChunks;
         }
 
-        public static List<WorkVessel.BuildPart> GatherBuildParts(List<Part> parts)
+        public static List<WorkItemVessel.BuildPart> GatherBuildParts(List<Part> parts)
         {
-            var buildParts = new List<WorkVessel.BuildPart>();
+            var buildParts = new List<WorkItemVessel.BuildPart>();
 
             var partDictionary = new Dictionary<string, List<Part>>();
             foreach (var part in parts)
@@ -117,7 +117,7 @@ namespace TimeToBuild
                 {
                     var part = partDictionary[partName][i];
 
-                    var buildPart = new WorkVessel.BuildPart();
+                    var buildPart = new WorkItemVessel.BuildPart();
 
                     if (i < inventoryParts.Count())
                     {
@@ -145,9 +145,9 @@ namespace TimeToBuild
             return buildParts;
         }
 
-        public List<WorkVessel.WorkChunkDatum> GetWorkVesselWorkChunkData()
+        public List<WorkItemVessel.WorkChunkDatum> GetVesselWorkChunkData()
         {
-            var workChunkData = new List<WorkVessel.WorkChunkDatum>();
+            var workChunkData = new List<WorkItemVessel.WorkChunkDatum>();
 
             var buildParts = GatherBuildParts(EditorLogic.fetch.ship.parts);
             var numNewParts = buildParts.Count(buildPart => !buildPart.ReuseFromInventory);
@@ -165,7 +165,7 @@ namespace TimeToBuild
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var workChunkDatum = new WorkVessel.WorkChunkDatum();
+                    var workChunkDatum = new WorkItemVessel.WorkChunkDatum();
                     workChunkDatum.Title = buildTimeConfig.Title;
 
                     var rate = workRates[workChunk.Identifier];
@@ -188,7 +188,7 @@ namespace TimeToBuild
         {
             if (!HighLogic.LoadedSceneIsEditor) return;
 
-            var workChunkData = GetWorkVesselWorkChunkData();
+            var workChunkData = GetVesselWorkChunkData();
 
             var title = "";
             var totalBuildTime = 0;
@@ -227,44 +227,44 @@ namespace TimeToBuild
         {
             LaunchScheduler.LaunchTimeEarliest = CurrentTime;
 
-            var optionLaunchNow = GetBuildDialogButton(LocalizerCache.LaunchNow, LaunchWorkVesselNow, CurrentTime);
-            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchWorkVesselNextMorning, LaunchScheduler.LaunchTimeNextMorning);
+            var optionLaunchNow = GetBuildDialogButton(LocalizerCache.LaunchNow, LaunchVesselNow, CurrentTime);
+            var optionWarpToNextMorning = GetBuildDialogButton(LocalizerCache.WarpToNextMorning, LaunchVesselNextMorning, LaunchScheduler.LaunchTimeNextMorning);
             
-            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, WorkVesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
+            SpawnMultiOptionDialog(LocalizerCache.BuildComplete, VesselToLaunch.ShipConstruct.shipName + " " + LocalizerCache.ReadyToLaunch, optionLaunchNow, optionWarpToNextMorning);
         }
 
-        private void LaunchWorkVessel()
+        private void LaunchVessel()
         {
-            if (LaunchScheduler is null || !LaunchScheduler.LaunchScheduled || WorkVesselToLaunch is null) return;
+            if (LaunchScheduler is null || !LaunchScheduler.LaunchScheduled || VesselToLaunch is null) return;
 
             var tempFile = KSPUtil.ApplicationRootPath + "saves/" + HighLogic.SaveFolder + "/Ships/temp.craft";
-            WorkVesselToLaunch.ShipConstruct.SaveShip().Save(tempFile);
+            VesselToLaunch.ShipConstruct.SaveShip().Save(tempFile);
 
-            FlightDriver.StartWithNewLaunch(tempFile, WorkVesselToLaunch.ShipConstruct.missionFlag, WorkVesselToLaunch.LaunchSiteName, new VesselCrewManifest());
+            FlightDriver.StartWithNewLaunch(tempFile, VesselToLaunch.ShipConstruct.missionFlag, VesselToLaunch.LaunchSiteName, new VesselCrewManifest());
 
-            WorkVesselToLaunch = null;
+            VesselToLaunch = null;
         }
 
-        private void LaunchWorkVesselNow()
+        private void LaunchVesselNow()
         {
-            LaunchScheduler.ScheduleLaunch(CurrentTime, WorkVesselToLaunch.ShipConstruct.shipName);
+            LaunchScheduler.ScheduleLaunch(CurrentTime, VesselToLaunch.ShipConstruct.shipName);
 
-            LaunchWorkVessel();
+            LaunchVessel();
         }
 
-        private void LaunchWorkVesselNextMorning()
+        private void LaunchVesselNextMorning()
         {
-            LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, WorkVesselToLaunch.ShipConstruct.shipName);
+            LaunchScheduler.ScheduleLaunch(LaunchScheduler.LaunchTimeNextMorning, VesselToLaunch.ShipConstruct.shipName);
 
-            LaunchWorkVessel();
+            LaunchVessel();
         }
 
         private bool TryStartBuild(List<WorkChunk> workChunks, bool actuallyAddIt)
         {
             if (!HighLogic.LoadedSceneIsEditor) return false;
 
-            var workVessel = new WorkVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
-            var workLoad = new WorkLoad(CurrentTime, workChunks, workVessel);
+            var vessel = new WorkItemVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
+            var workLoad = new WorkLoad(CurrentTime, workChunks, vessel);
             var success = TryAddWorkLoad(workLoad, actuallyAddIt);
 
             if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.BuildFacilityBusy);

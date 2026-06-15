@@ -36,11 +36,12 @@
     <Compile Include="Facilities\ResearchFacility.cs" />
     <Compile Include="Facilities\WorkFacility.cs" />
     <Compile Include="Utils\SceneTracker.cs" />
-    <Compile Include="WorkSystem\WorkChunk.cs" />
+    <Compile Include="Work\WorkChunk.cs" />
     <Compile Include="Facilities\BuildFacility.cs" />
-    <Compile Include="WorkSystem\WorkTime.cs" />
-    <Compile Include="WorkSystem\Work.cs" />
-    <Compile Include="WorkSystem\TimeFormula.cs" />
+    <Compile Include="Work\WorkItem\WorkItemTech.cs" />
+    <Compile Include="Work\WorkTime.cs" />
+    <Compile Include="Work\WorkItem\WorkItem.cs" />
+    <Compile Include="Work\TimeFormula.cs" />
     <Compile Include="Utils\FormulaParser.cs" />
     <Compile Include="Core\LaunchScheduler.cs" />
     <Compile Include="Utils\LocalizerCache.cs" />
@@ -51,7 +52,8 @@
     <Compile Include="Core\TimeToBuildProfile.cs" />
     <Compile Include="Core\TimeToBuildSettings.cs" />
     <Compile Include="Core\Calendar.cs" />
-    <Compile Include="WorkSystem\WorkLoad.cs" />
+    <Compile Include="Work\WorkLoad.cs" />
+    <Compile Include="Work\WorkItem\WorkItemVessel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ScrapYard, Version=2.2.1.0, Culture=neutral, processorArchitecture=MSIL">

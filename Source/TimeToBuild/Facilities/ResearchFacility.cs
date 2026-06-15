@@ -44,9 +44,9 @@ namespace TimeToBuild.Facilities
 
         public override void OnWorkLoadComplete(WorkLoad workLoad)
         {
-            if (workLoad.WorkTech is null) return;
+            if (workLoad.Tech is null) return;
 
-            UnlockTech(workLoad.WorkTech.TechID);
+            UnlockTech(workLoad.Tech.TechID);
         }
 
         public List<WorkChunk> ComputeResearchWorkChunks()
@@ -75,9 +75,9 @@ namespace TimeToBuild.Facilities
             return workChunks;
         }
 
-        public List<WorkVessel.WorkChunkDatum> GetWorkTechWorkChunkData()
+        public List<WorkItemVessel.WorkChunkDatum> GetTechWorkChunkData()
         {
-            var workChunkData = new List<WorkVessel.WorkChunkDatum>();
+            var workChunkData = new List<WorkItemVessel.WorkChunkDatum>();
 
             var workChunks = ComputeResearchWorkChunks();
 
@@ -91,7 +91,7 @@ namespace TimeToBuild.Facilities
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
-                    var workChunkDatum = new WorkVessel.WorkChunkDatum();
+                    var workChunkDatum = new WorkItemVessel.WorkChunkDatum();
                     workChunkDatum.Title = researchTimeConfig.Title;
 
                     var rate = workRates[workChunk.Identifier];
@@ -112,7 +112,7 @@ namespace TimeToBuild.Facilities
 
             if (TechNodeToResearch is null) return;
 
-            var workChunkData = GetWorkTechWorkChunkData();
+            var workChunkData = GetTechWorkChunkData();
 
             var title = "";
             var totalResearchime = 0;
@@ -140,8 +140,8 @@ namespace TimeToBuild.Facilities
         {
             if (HighLogic.LoadedScene != GameScenes.SPACECENTER) return false;
 
-            var workTech = new WorkTech(TechNodeToResearch.techID);
-            var workLoad = new WorkLoad(CurrentTime, workChunks, workTech);
+            var tech = new WorkItemTech(TechNodeToResearch.techID);
+            var workLoad = new WorkLoad(CurrentTime, workChunks, tech);
             var success = TryAddWorkLoad(workLoad, actuallyAddIt);
 
             if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartResearch, LocalizerCache.ResearchFacilityBusy);
@@ -162,7 +162,7 @@ namespace TimeToBuild.Facilities
 
             var workChunks = ComputeResearchWorkChunks();
 
-            var workChunkData = GetWorkTechWorkChunkData();
+            var workChunkData = GetTechWorkChunkData();
 
             var completionTime = CurrentTime;
             foreach (var workChunkDatum in workChunkData) completionTime += workChunkDatum.Duration;
