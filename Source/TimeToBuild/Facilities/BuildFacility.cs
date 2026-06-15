@@ -211,10 +211,10 @@ namespace TimeToBuild
             }
             title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
-            LaunchScheduler.LaunchTimeEarliest = TimeToBuild.Instance.Scenario.EditorStartTime + totalBuildTime;
+            LaunchScheduler.LaunchTimeEarliest = CurrentTime + totalBuildTime;
 
             var message = "";
-            foreach (var date in LaunchScheduler.GetSalientDates()) message += TimeToBuild.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            foreach (var date in TimeToBuild.Instance.GetSalientDates(LaunchScheduler.LaunchTimeNextMorning)) message += TimeToBuild.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
             var optionStartBuild = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
             var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest);
@@ -264,7 +264,7 @@ namespace TimeToBuild
             if (!HighLogic.LoadedSceneIsEditor) return false;
 
             var workVessel = new WorkVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
-            var workLoad = new WorkLoad(TimeToBuild.Instance.Scenario.EditorStartTime, workChunks, workVessel);
+            var workLoad = new WorkLoad(CurrentTime, workChunks, workVessel);
             var success = TryAddWorkLoad(workLoad, actuallyAddIt);
 
             if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.BuildFacilityBusy);

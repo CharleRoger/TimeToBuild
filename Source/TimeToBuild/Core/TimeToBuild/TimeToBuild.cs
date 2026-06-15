@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,6 +87,44 @@ namespace TimeToBuild
             }
 
             return workRates;
+        }
+
+        // List of tuples instead of dictionary in case of duplicate times or names
+        public IOrderedEnumerable<Tuple<double, string>> GetSalientDates(double endTime)
+        {
+            endTime += Profile.AlarmWarningBufferTime;
+
+            var salientDates = new List<Tuple<double, string>>{ new Tuple<double, string>(CurrentTime, LocalizerCache.CurrentTime) };
+
+            if (LaunchScheduler.LaunchTimeEarliest > 0 && LaunchScheduler.LaunchTimeEarliest < endTime) salientDates.Add(new Tuple<double, string>(LaunchScheduler.LaunchTimeEarliest, LocalizerCache.LaunchTimeEarliest));
+            if (LaunchScheduler.LaunchTimeNextMorning > 0 && LaunchScheduler.LaunchTimeNextMorning < endTime) salientDates.Add(new Tuple<double, string>(LaunchScheduler.LaunchTimeNextMorning, LocalizerCache.LaunchTimeNextMorning));
+
+            if (!(AlarmClockScenario.Instance is null))
+            {
+                foreach (var alarm in AlarmClockScenario.Instance.alarms.Values)
+                {
+                    if (alarm.ut < endTime)
+                    {
+                        var alarmMessage = alarm.title;
+                        if (alarm.vesselName != null && alarm.vesselName != "") alarmMessage += " (" + alarm.vesselName + ")";
+                        salientDates.Add(new Tuple<double, string>(alarm.ut, alarmMessage));
+                    }
+                }
+            }
+
+            if (!(Contracts.ContractSystem.Instance is null))
+            {
+                foreach (var contract in Contracts.ContractSystem.Instance.GetCurrentActiveContracts<Contracts.Contract>())
+                {
+                    if (contract.TimeDeadline < endTime)
+                    {
+                        var contractMessage = contract.Title;
+                        salientDates.Add(new Tuple<double, string>(contract.TimeDeadline, contractMessage));
+                    }
+                }
+            }
+
+            return salientDates.OrderBy(p => p.Item1);
         }
     }
 }
