@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace TimeToBuild
+namespace TimeToBuild.Utils
 {
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class SceneTracker : MonoBehaviour

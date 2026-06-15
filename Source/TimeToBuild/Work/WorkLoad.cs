@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
-using static TimeToBuild.MiscUtils;
+using static TimeToBuild.Utils.MiscUtils;
 
-namespace TimeToBuild
+namespace TimeToBuild.Work
 {
     public class WorkLoad
     {

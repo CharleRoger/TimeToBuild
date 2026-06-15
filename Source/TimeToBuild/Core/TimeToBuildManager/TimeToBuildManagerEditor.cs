@@ -1,7 +1,9 @@
 ﻿using UnityEngine;
-using static TimeToBuild.MiscUtils;
+using TimeToBuild.Utils;
+using TimeToBuild.Facilities;
+using static TimeToBuild.Utils.MiscUtils;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
     public class TimeToBuildManagerEditor : TimeToBuildManager

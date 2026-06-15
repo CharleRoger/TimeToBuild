@@ -1,6 +1,6 @@
 ﻿using KSP.Localization;
 
-namespace TimeToBuild
+namespace TimeToBuild.Utils
 {
     public static class LocalizerCache
     {

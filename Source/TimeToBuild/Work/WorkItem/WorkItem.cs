@@ -1,4 +1,4 @@
-﻿namespace TimeToBuild
+﻿namespace TimeToBuild.Work
 {
     public abstract class WorkItem
     {

@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
-using static TimeToBuild.MiscUtils;
+using static TimeToBuild.Utils.MiscUtils;
 using KSP.UI.Screens;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
     public class TimeToBuildManagerSpaceCentre : TimeToBuildManager

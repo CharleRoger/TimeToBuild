@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using static TimeToBuild.MiscUtils;
+using TimeToBuild.Utils;
+using static TimeToBuild.Utils.MiscUtils;
+using TimeToBuild.Core;
+using TimeToBuild.Work;
 
-namespace TimeToBuild
+namespace TimeToBuild.Facilities
 {
     public class BuildFacility : WorkFacility
     {

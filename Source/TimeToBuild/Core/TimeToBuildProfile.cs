@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using static TimeToBuild.WorkTime;
+using TimeToBuild.Work;
+using static TimeToBuild.Work.WorkTime;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     public class TimeToBuildProfile
     {

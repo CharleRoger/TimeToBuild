@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace TimeToBuild
+namespace TimeToBuild.Utils
 {
     public static class FormulaParser
     {

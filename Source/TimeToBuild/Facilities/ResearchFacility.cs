@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using KSP.UI.Screens;
 using KSP.Localization;
-using static TimeToBuild.MiscUtils;
+using static TimeToBuild.Utils.MiscUtils;
+using TimeToBuild.Core;
+using TimeToBuild.Utils;
+using TimeToBuild.Work;
 using System.Collections.Generic;
 using System;
 using System.Linq;

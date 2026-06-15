@@ -1,4 +1,4 @@
-﻿namespace TimeToBuild
+﻿namespace TimeToBuild.Core
 {
     public class TimeToBuildSettings : GameParameters.CustomParameterNode
     {

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     public class LaunchScheduler
     {

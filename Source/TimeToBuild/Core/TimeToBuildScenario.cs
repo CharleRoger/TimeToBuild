@@ -1,6 +1,6 @@
 ﻿using TimeToBuild.Facilities;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     [KSPScenario(ScenarioCreationOptions.AddToAllGames, new GameScenes[] { GameScenes.SPACECENTER, GameScenes.EDITOR, GameScenes.LOADING, GameScenes.LOADINGBUFFER, GameScenes.FLIGHT })]
     public class TimeToBuildScenario : ScenarioModule

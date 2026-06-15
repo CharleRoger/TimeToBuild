@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using TimeToBuild.Core;
+using TimeToBuild.Work;
 
-namespace TimeToBuild
+namespace TimeToBuild.Utils
 {
     public static class MiscUtils
     {

@@ -3,10 +3,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using static TimeToBuild.TimeToBuildProfile;
-using static TimeToBuild.MiscUtils;
+using static TimeToBuild.Core.TimeToBuildProfile;
+using TimeToBuild.Utils;
+using static TimeToBuild.Utils.MiscUtils;
+using TimeToBuild.Work;
 
-namespace TimeToBuild
+namespace TimeToBuild.Core
 {
     public abstract class TimeToBuildManager : MonoBehaviour
     {

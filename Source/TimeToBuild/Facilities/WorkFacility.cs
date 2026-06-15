@@ -1,8 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TimeToBuild.Core;
+using TimeToBuild.Work;
 using UnityEngine;
 
-namespace TimeToBuild
+namespace TimeToBuild.Facilities
 {
     public abstract class WorkFacility
     {

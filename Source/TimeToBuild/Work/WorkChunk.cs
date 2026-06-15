@@ -1,7 +1,7 @@
 ﻿using System;
-using static TimeToBuild.WorkTime;
+using static TimeToBuild.Work.WorkTime;
 
-namespace TimeToBuild
+namespace TimeToBuild.Work
 {
     public class WorkChunk
     {
