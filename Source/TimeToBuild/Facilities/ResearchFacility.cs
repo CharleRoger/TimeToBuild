@@ -20,18 +20,33 @@ namespace TimeToBuild.Facilities
 
         }
 
-        public override void OnWorkLoadComplete(WorkLoad workLoad)
+        public override void Load(ConfigNode node)
         {
-            if (workLoad.Tech is null) return;
+            foreach (var workItemNode in node.GetNodes("WorkItemTech")) WorkItems.Add(new WorkItemTech(workItemNode));
+        }
 
-            var protoTechNode = AssetBase.RnDTechTree.FindTech(workLoad.Tech.TechID);
+        public override ConfigNode Save()
+        {
+            var node = new ConfigNode();
+
+            foreach (var workItem in WorkItems) if (workItem is WorkItemTech) node.AddNode("WorkItemTech", workItem.Save());
+
+            return node;
+        }
+
+        public override void OnWorkItemComplete(WorkItem workItem)
+        {
+            var tech = (WorkItemTech)workItem;
+            if (tech is null) return;
+
+            var protoTechNode = AssetBase.RnDTechTree.FindTech(tech.TechID);
             ResearchAndDevelopment.Instance.UnlockProtoTechNode(protoTechNode);
 
             if (!(RDController.Instance is null))
             {
                 foreach (var rdNode in RDController.Instance.nodes)
                 {
-                    if (rdNode.tech.techID == workLoad.Tech.TechID)
+                    if (rdNode.tech.techID == tech.TechID)
                     {
                         rdNode.UpdateGraphics();
                         break;
@@ -104,9 +119,8 @@ namespace TimeToBuild.Facilities
         {
             if (HighLogic.LoadedScene != GameScenes.SPACECENTER) return false;
 
-            var tech = new WorkItemTech(TechNodeToResearch.techID);
-            var workLoad = new WorkLoad(CurrentTime, workChunks, tech);
-            var success = TryAddWorkLoad(workLoad, actuallyAddIt);
+            var tech = new WorkItemTech(CurrentTime, workChunks, TechNodeToResearch.techID);
+            var success = TryAddWorkItem(tech, actuallyAddIt);
 
             if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartResearch, LocalizerCache.ResearchFacilityBusy);
 
@@ -145,7 +159,7 @@ namespace TimeToBuild.Facilities
             }
         }
 
-        public override DialogGUIButton[] GetStartWorkDialogButtons()
+        public override DialogGUIButton[] GetStartWorkItemDialogButtons()
         {
             return new DialogGUIButton[1]
             {
@@ -153,7 +167,7 @@ namespace TimeToBuild.Facilities
             };
         }
 
-        public override void SpawnWorkCompleteDialog(WorkItem workItem)
+        public override void SpawnWorkItemCompleteDialog(WorkItem workItem)
         {
             var tech = (WorkItemTech)workItem;
             if (tech is null) return;

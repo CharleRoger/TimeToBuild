@@ -52,7 +52,6 @@
     <Compile Include="Core\TimeToBuildProfile.cs" />
     <Compile Include="Core\TimeToBuildSettings.cs" />
     <Compile Include="Core\Calendar.cs" />
-    <Compile Include="Work\WorkLoad.cs" />
     <Compile Include="Work\WorkItem\WorkItemVessel.cs" />
   </ItemGroup>
   <ItemGroup>

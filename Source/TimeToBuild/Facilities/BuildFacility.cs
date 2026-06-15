@@ -19,11 +19,26 @@ namespace TimeToBuild.Facilities
 
         }
 
-        public override void OnWorkLoadComplete(WorkLoad workLoad)
+        public override void Load(ConfigNode node)
         {
-            if (workLoad.Vessel is null) return;
+            foreach (var workItemNode in node.GetNodes("WorkItemVessel")) WorkItems.Add(new WorkItemVessel(workItemNode));
+        }
 
-            VesselToLaunch = workLoad.Vessel;
+        public override ConfigNode Save()
+        {
+            var node = new ConfigNode();
+
+            foreach (var workItem in WorkItems) if (workItem is WorkItemVessel) node.AddNode("WorkItemVessel", workItem.Save());
+
+            return node;
+        }
+
+        public override void OnWorkItemComplete(WorkItem workItem)
+        {
+            var vessel = (WorkItemVessel)workItem;
+            if (vessel is null) return;
+
+            VesselToLaunch = vessel;
         }
 
         public override List<WorkChunk> ComputeWorkChunks()
@@ -194,7 +209,7 @@ namespace TimeToBuild.Facilities
             LaunchScheduler.LaunchTimeEarliest = CompletionTime;
         }
 
-        public override void SpawnWorkCompleteDialog(WorkItem workItem)
+        public override void SpawnWorkItemCompleteDialog(WorkItem workItem)
         {
             var vessel = (WorkItemVessel)workItem;
             if (vessel is null) return;
@@ -237,9 +252,8 @@ namespace TimeToBuild.Facilities
         {
             if (!HighLogic.LoadedSceneIsEditor) return false;
 
-            var vessel = new WorkItemVessel(EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
-            var workLoad = new WorkLoad(CurrentTime, workChunks, vessel);
-            var success = TryAddWorkLoad(workLoad, actuallyAddIt);
+            var vessel = new WorkItemVessel(CurrentTime, workChunks, EditorLogic.fetch.launchSiteName, EditorLogic.fetch.ship);
+            var success = TryAddWorkItem(vessel, actuallyAddIt);
 
             if (!success) SpawnMultiOptionDialog(LocalizerCache.CannotStartBuild, LocalizerCache.BuildFacilityBusy);
 
@@ -300,7 +314,7 @@ namespace TimeToBuild.Facilities
             }
         }
 
-        public override DialogGUIButton[] GetStartWorkDialogButtons()
+        public override DialogGUIButton[] GetStartWorkItemDialogButtons()
         {
             return new DialogGUIButton[3]
             {

@@ -5,13 +5,12 @@ using TimeToBuild.Utils;
 using static TimeToBuild.Utils.MiscUtils;
 using TimeToBuild.Work;
 using UnityEngine;
-using static DatabaseLoaderModel_DAE;
 
 namespace TimeToBuild.Facilities
 {
     public abstract class WorkFacility
     {
-        public List<WorkLoad> WorkLoads { get; private set; } = new List<WorkLoad>();
+        public List<WorkItem> WorkItems { get; private set; } = new List<WorkItem>();
         public SpaceCenterFacility Facility { get; private set; }
         public List<SpaceCenterFacility> UsingFacilities { get; private set; } = new List<SpaceCenterFacility>();
         protected double CompletionTime { get; private set; }
@@ -25,49 +24,34 @@ namespace TimeToBuild.Facilities
             if (facility == SpaceCenterFacility.SpaceplaneHangar) UsingFacilities.Add(SpaceCenterFacility.Runway);
         }
 
+        public abstract void Load(ConfigNode node);
+        public abstract ConfigNode Save();
         public abstract List<WorkChunk> ComputeWorkChunks();
         public abstract List<WorkChunk.WorkChunkDatum> GetWorkChunkData();
-        public abstract void SpawnWorkCompleteDialog(WorkItem workItem);
-        public abstract void OnWorkLoadComplete(WorkLoad workLoad);
+        public abstract void SpawnWorkItemCompleteDialog(WorkItem workItem);
+        public abstract void OnWorkItemComplete(WorkItem workItem);
         public abstract void OnStartWork();
-        public abstract DialogGUIButton[] GetStartWorkDialogButtons();
+        public abstract DialogGUIButton[] GetStartWorkItemDialogButtons();
 
-        public void Load(ConfigNode node)
+        public void UpdateWorkItem(int workItemIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> workRates)
         {
-            foreach (var workLoadNode in node.GetNodes("WorkLoad"))
-            {
-                WorkLoads.Add(new WorkLoad(workLoadNode));
-            }
-        }
+            var workItem = WorkItems[workItemIndex];
 
-        public void Save(ConfigNode node)
-        {
-            foreach (var workLoad in WorkLoads)
-            {
-                node.AddNode("WorkLoad", workLoad.GetConfigNode());
-            }
-        }
-
-        public void UpdateWorkLoad(int workLoadIndex, Dictionary<WorkTime.WorkTimeIdentifier, double> workRates)
-        {
-            var workLoad = WorkLoads[workLoadIndex];
-
-            bool workComplete = workLoad.UpdateWorkDone(workRates);
+            bool workComplete = workItem.UpdateWorkDone(workRates);
 
             if (workComplete)
             {
-                WorkLoads.RemoveAt(workLoadIndex);
+                WorkItems.RemoveAt(workItemIndex);
 
                 TimeWarp.SetRate(0, true);
 
-                OnWorkLoadComplete(workLoad);
+                OnWorkItemComplete(workItem);
 
-                if (!(workLoad.Vessel is null)) SpawnWorkCompleteDialog(workLoad.Vessel);
-                if (!(workLoad.Tech is null)) SpawnWorkCompleteDialog(workLoad.Tech);
+                SpawnWorkItemCompleteDialog(workItem);
             }
         }
 
-        public IEnumerator UpdateWorkLoads_Coroutine()
+        public IEnumerator UpdateWorkItems_Coroutine()
         {
             while (TimeToBuildManager.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
 
@@ -75,20 +59,17 @@ namespace TimeToBuild.Facilities
             {
                 var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
-                for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
-                {
-                    UpdateWorkLoad(workLoadIndex, workRates);
-                }
+                for (int workItemIndex = 0; workItemIndex < WorkItems.Count; workItemIndex++) UpdateWorkItem(workItemIndex, workRates);
 
                 yield return new WaitForFixedUpdate();
             }
         }
 
-        public bool TryAddWorkLoad(WorkLoad workLoad, bool actuallyAddIt)
+        public bool TryAddWorkItem(WorkItem workItem, bool actuallyAddIt)
         {
-            if (WorkLoads.Count > 0) return false;
+            if (WorkItems.Count > 0) return false;
 
-            if (actuallyAddIt) WorkLoads.Add(workLoad);
+            if (actuallyAddIt) WorkItems.Add(workItem);
 
             return true;
         }
@@ -136,7 +117,7 @@ namespace TimeToBuild.Facilities
             foreach (var date in TimeToBuildManager.Instance.GetSalientDates(CompletionTime)) message += GetEventString(date.Item1, date.Item2, false);
             message += GetEventString(CompletionTime, LocalizerCache.CompletionTime, true);
 
-            SpawnMultiOptionDialog(title, message, GetStartWorkDialogButtons());
+            SpawnMultiOptionDialog(title, message, GetStartWorkItemDialogButtons());
         }
     }
 }

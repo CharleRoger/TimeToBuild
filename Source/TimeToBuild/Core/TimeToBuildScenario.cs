@@ -18,15 +18,15 @@ namespace TimeToBuild.Core
 
             BuildFacilityVAB = new BuildFacility(SpaceCenterFacility.VehicleAssemblyBuilding);
             if (node.HasNode("BuildFacilityVAB")) BuildFacilityVAB.Load(node.GetNode("BuildFacilityVAB"));
-            StartCoroutine(BuildFacilityVAB.UpdateWorkLoads_Coroutine());
+            StartCoroutine(BuildFacilityVAB.UpdateWorkItems_Coroutine());
 
             BuildFacilitySPH = new BuildFacility(SpaceCenterFacility.SpaceplaneHangar);
             if (node.HasNode("BuildFacilitySPH")) BuildFacilitySPH.Load(node.GetNode("BuildFacilitySPH"));
-            StartCoroutine(BuildFacilitySPH.UpdateWorkLoads_Coroutine());
+            StartCoroutine(BuildFacilitySPH.UpdateWorkItems_Coroutine());
 
             ResearchFacility = new ResearchFacility();
             if (node.HasNode("ResearchFacility")) ResearchFacility.Load(node.GetNode("ResearchFacility"));
-            StartCoroutine(ResearchFacility.UpdateWorkLoads_Coroutine());
+            StartCoroutine(ResearchFacility.UpdateWorkItems_Coroutine());
         }
 
         public override void OnSave(ConfigNode node)
@@ -35,26 +35,9 @@ namespace TimeToBuild.Core
 
             node.AddValue("EditorStartTime", EditorStartTime);
 
-            if (!(BuildFacilityVAB is null))
-            {
-                var buildFacilityVABNode = new ConfigNode();
-                BuildFacilityVAB.Save(buildFacilityVABNode);
-                node.AddNode("BuildFacilityVAB", buildFacilityVABNode);
-            }
-
-            if (!(BuildFacilitySPH is null))
-            {
-                var buildFacilitySPHNode = new ConfigNode();
-                BuildFacilitySPH.Save(buildFacilitySPHNode);
-                node.AddNode("BuildFacilitySPH", buildFacilitySPHNode);
-            }
-
-            if (!(ResearchFacility is null))
-            {
-                var researchFacilityNode = new ConfigNode();
-                ResearchFacility.Save(researchFacilityNode);
-                node.AddNode("ResearchFacility", researchFacilityNode);
-            }
+            if (!(BuildFacilityVAB is null)) node.AddNode("BuildFacilityVAB", BuildFacilityVAB.Save());
+            if (!(BuildFacilitySPH is null)) node.AddNode("BuildFacilitySPH", BuildFacilitySPH.Save());
+            if (!(ResearchFacility is null)) node.AddNode("ResearchFacility", ResearchFacility.Save());
         }
     }
 }

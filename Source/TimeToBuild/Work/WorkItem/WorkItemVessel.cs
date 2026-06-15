@@ -1,4 +1,6 @@
-﻿namespace TimeToBuild.Work
+﻿using System.Collections.Generic;
+
+namespace TimeToBuild.Work
 {
     public class WorkItemVessel : WorkItem
     {
@@ -18,7 +20,7 @@
         [Persistent]
         public ShipConstruct ShipConstruct { get; private set; }
 
-        public WorkItemVessel(string launchSiteName, ShipConstruct shipConstruct)
+        public WorkItemVessel(double startTime, List<WorkChunk> workChunks, string launchSiteName, ShipConstruct shipConstruct) : base(startTime, workChunks)
         {
             LaunchSiteName = launchSiteName;
             ShipConstruct = shipConstruct;
@@ -26,7 +28,7 @@
 
         public override ConfigNode Save()
         {
-            ConfigNode node = new ConfigNode();
+            var node = base.Save();
 
             node.AddValue("LaunchSiteName", LaunchSiteName);
 
@@ -37,6 +39,8 @@
 
         public override void Load(ConfigNode node)
         {
+            base.Load(node);
+
             if (node.HasValue("LaunchSiteName")) LaunchSiteName = node.GetValue("LaunchSiteName");
 
             ShipConstruct = new ShipConstruct();
