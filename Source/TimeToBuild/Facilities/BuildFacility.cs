@@ -209,7 +209,7 @@ namespace TimeToBuild
 
                 title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
-            title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
+            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
             LaunchScheduler.LaunchTimeEarliest = CurrentTime + totalBuildTime;
 

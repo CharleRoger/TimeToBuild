@@ -124,7 +124,7 @@ namespace TimeToBuild.Facilities
 
                 title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
-            title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalResearchime) + "\n\n";
+            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalResearchime) + "\n\n";
 
             var completionDate = CurrentTime + totalResearchime;
 
