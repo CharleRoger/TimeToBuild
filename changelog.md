@@ -1,7 +1,7 @@
 # 0.3.0
-- Renamed BuildChunk to WorkChunk.
 - Changed `BuildTime` formulae to be configured as a single `TimeFormula` node with three fields: `Work`, `Rate` and `Overhead`.
 - Added the ability to define `ResearchTime` nodes in a `TimeToBuildProfile` which control time taken to unlock tech tree nodes.
+  - In the default configuration, research takes 60*sqrt(cost/5) days.
 # 0.2.2
 - Added "Warp to next morning" button to build-completion launch dialog.
 # 0.2.1
