@@ -102,7 +102,7 @@ namespace TimeToBuild.Core
             {
                 foreach (var alarm in AlarmClockScenario.Instance.alarms.Values)
                 {
-                    if (alarm.ut < endTime)
+                    if (CurrentTime < alarm.ut && alarm.ut < endTime)
                     {
                         var alarmMessage = alarm.title;
                         if (alarm.vesselName != null && alarm.vesselName != "") alarmMessage += " (" + alarm.vesselName + ")";
@@ -115,7 +115,7 @@ namespace TimeToBuild.Core
             {
                 foreach (var contract in Contracts.ContractSystem.Instance.GetCurrentActiveContracts<Contracts.Contract>())
                 {
-                    if (contract.TimeDeadline < endTime)
+                    if (CurrentTime < contract.TimeDeadline && contract.TimeDeadline < endTime)
                     {
                         var contractMessage = contract.Title;
                         salientDates.Add(new Tuple<double, string>(contract.TimeDeadline, contractMessage));
