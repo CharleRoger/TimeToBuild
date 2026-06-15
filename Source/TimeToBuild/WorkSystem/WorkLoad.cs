@@ -15,6 +15,8 @@ namespace TimeToBuild
         public List<WorkChunk> WorkChunks { get; private set; } = new List<WorkChunk>();
         [Persistent]
         public WorkVessel WorkVessel { get; private set; } = null;
+        [Persistent]
+        public WorkTech WorkTech { get; private set; } = null;
 
         public WorkLoad(double startTime, List<WorkChunk> workChunks)
         {
@@ -29,6 +31,11 @@ namespace TimeToBuild
             WorkVessel = workVessel;
         }
 
+        public WorkLoad(double startTime, List<WorkChunk> workChunks, WorkTech workTech) : this(startTime, workChunks)
+        {
+            WorkTech = workTech;
+        }
+
         public WorkLoad(ConfigNode node)
         {
             if (node.HasValue("StartTime")) StartTime = double.Parse(node.GetValue("StartTime"));
@@ -38,6 +45,8 @@ namespace TimeToBuild
             foreach (var workChunkNode in node.GetNodes("WorkChunk")) WorkChunks.Add(new WorkChunk(workChunkNode));
 
             if (node.HasNode("WorkVessel")) WorkVessel = new WorkVessel(node.GetNode("WorkVessel"));
+            
+            if (node.HasNode("WorkTech")) WorkTech = new WorkTech(node.GetNode("WorkTech"));
         }
 
         public ConfigNode GetConfigNode()
@@ -56,6 +65,11 @@ namespace TimeToBuild
             if (WorkVessel != null)
             {
                 node.AddNode("WorkVessel", WorkVessel.Save());
+            }
+
+            if (WorkTech != null)
+            {
+                node.AddNode("WorkTech", WorkTech.Save());
             }
 
             return node;

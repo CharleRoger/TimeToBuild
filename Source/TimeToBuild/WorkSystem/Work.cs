@@ -62,4 +62,34 @@
             Load(node);
         }
     }
+
+    public class WorkTech : Work
+    {
+        [Persistent]
+        public string TechID { get; private set; } = "";
+
+        public WorkTech(string techID)
+        {
+            TechID = techID;
+        }
+
+        public override ConfigNode Save()
+        {
+            ConfigNode node = new ConfigNode();
+
+            node.AddValue("TechID", TechID);
+
+            return node;
+        }
+
+        public override void Load(ConfigNode node)
+        {
+            if (node.HasValue("TechID")) TechID = node.GetValue("TechID");
+        }
+
+        public WorkTech(ConfigNode node)
+        {
+            Load(node);
+        }
+    }
 }
