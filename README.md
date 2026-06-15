@@ -8,7 +8,7 @@ This mod is designed to provide a lightweight, flexible framework to implement b
 
 ### Current features
 
-#### Core functionality
+#### Vessel build time
 
 When launching a vessel from the editor, a dialog pops up:
 
@@ -24,6 +24,10 @@ Reverting to the VAB or SPH reverts back to before the construction of the vesse
 
 The ability to launch from the launchpad and runway facilities is currently disabled. These facilities are planned to take on new functionality in the future (see planned features below).
 
+#### Tech tree research time
+
+Tech tree node research also takes time to progress, with similar popup dialogs for starting and completing research. Currently, only one tech tree node can be researched at a time.
+
 #### Configuration
 
 The default configuration defines three periods of time to take a vessel from parts, assumed to have already been designed and fabricated elsewhere, to launch:
@@ -37,29 +41,29 @@ Custom configurations can be described via a `TimeToBuildConfig` node with any n
 - `MorningTime` in seconds, for warp-to-launch-next-morning functionality.
 - `AlarmWarningBufferTime` in seconds, for listing alarms in the in-game TimeToBuild dialog which are set after the completion time, but within the specified buffer period.
 
-`BuildTime` nodes control time taken to construct and rollout vessels and take the following fields:
+`BuildTime` nodes control time taken to construct and rollout vessels while `ResearchTime` nodes control time taken to unlock tech tree nodes. Both take the following fields:
 - `name`, an arbitrary string which should ideally be unique.
-- `Title`, displayed in the build-time dialog in game.
+- `title`, displayed in the build-time dialog in game.
+- `description`, currently unused.
+
+`BuildTime` additionally take the following fields:
 - Any number of `Facility`s in which to operate, e.g. on construction of a vessel in the VAB/SPH and/or rollout of the vessel onto the launchpad/runway: `Launchpad`, `Runway`, `VehicleAssemblyBuilding`, `SpaceplaneHangar`.
 - `WholeVessel = true` or `PerNewPart = true` and/or `PerReusedPart = true`, specifies whether the formula applies to the whole vessel or as a sum over new or recovered parts.
-
-`ResearchTime` nodes control time taken to unlock tech tree nodes and take the following fields:
-- `name`, an arbitrary string which should ideally be unique.
 
 Each `BuildTime` and `ResearchTime` node must define one `TimeFormula` node which itself has three fields, `Work`, `Rate`, and `Overhead`, with the total time computed as `Work / Rate + Overhead`. Each of the three fields is an arbitrary mathematical formula with the following constraints:
   - Supports all the basic mathematical operations `+ - * / ^ ( )`.
   - The following variables are currently recognised:
     - Time units: `year`, `day` (of the home planet), `hour`, `minute`, `second`.
     - Facility levels: `facility_level` (current assembly/launch facility), `Administration_level`, `AstronautComplex_level`, `Launchpad_level`, `MissionControl_level`, `ResearchAndDevelopment_level`, `Runway_level`, `SpaceplaneHangar_level`, `TrackingStation_level`, `VehicleAssemblyBuilding_level`.
-    - Whole-vessel properties: `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`, `num_parts`.
-    - Individual part properties: `num_builds` (tracked by ScrapYard), `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`.
+    - Whole-vessel properties (`BuildTime` only): `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`, `num_parts`.
+    - Individual part properties (`BuildTime` only): `num_builds` (tracked by ScrapYard), `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`.
+	- Tech tree node properties (`ResearchTime` only): `cost`.
 
 ### Planned features
 
 #### Tech tree research time
 
-- Tech tree unlocks can also be configured to take time with a custom formula.
-  - Individual tech tree nodes can be configured to override the global formula.
+- Individual tech tree nodes can be configured to override the global formula.
 
 #### Vessel storage
 
