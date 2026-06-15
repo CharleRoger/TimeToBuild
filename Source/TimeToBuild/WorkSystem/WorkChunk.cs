@@ -1,4 +1,5 @@
-﻿using static TimeToBuild.WorkTime;
+﻿using System;
+using static TimeToBuild.WorkTime;
 
 namespace TimeToBuild
 {
@@ -18,26 +19,7 @@ namespace TimeToBuild
         {
             var identifier = new WorkTimeIdentifier();
             if (node.HasValue("name")) identifier.Name = node.GetValue("name");
-            if (node.HasValue("Facility"))
-            {
-                switch (node.GetValue("Facility"))
-                {
-                    case "VehicleAssemblyBuilding":
-                        identifier.Facility = SpaceCenterFacility.VehicleAssemblyBuilding;
-                        break;
-                    case "SpaceplaneHangar":
-                        identifier.Facility = SpaceCenterFacility.SpaceplaneHangar;
-                        break;
-                    case "LaunchPad":
-                        identifier.Facility = SpaceCenterFacility.LaunchPad;
-                        break;
-                    case "Runway":
-                        identifier.Facility = SpaceCenterFacility.Runway;
-                        break;
-                    default:
-                        break;
-                }
-            }
+            if (node.HasValue("Facility")) Enum.TryParse(node.GetValue("Facility"), out identifier.Facility);
             if (node.HasValue("Work")) Work = double.Parse(node.GetValue("Work"));
             if (node.HasValue("Overhead")) Overhead = double.Parse(node.GetValue("Overhead"));
             if (node.HasValue("CompletionTime")) CompletionTime = double.Parse(node.GetValue("CompletionTime"));
@@ -49,23 +31,7 @@ namespace TimeToBuild
             ConfigNode node = new ConfigNode();
 
             node.AddValue("name", Identifier.Name);
-            switch (Identifier.Facility)
-            {
-                case SpaceCenterFacility.VehicleAssemblyBuilding:
-                    node.AddValue("Facility", "VehicleAssemblyBuilding");
-                    break;
-                case SpaceCenterFacility.SpaceplaneHangar:
-                    node.AddValue("Facility", "SpaceplaneHangar");
-                    break;
-                case SpaceCenterFacility.LaunchPad:
-                    node.AddValue("Facility", "LaunchPad");
-                    break;
-                case SpaceCenterFacility.Runway:
-                    node.AddValue("Facility", "Runway");
-                    break;
-                default:
-                    break;
-            }
+            node.AddValue("Facility", Identifier.Facility.ToString());
             node.AddValue("Work", Work);
             node.AddValue("Overhead", Overhead);
             if (CompletionTime > 0) node.AddValue("CompletionTime", CompletionTime);
