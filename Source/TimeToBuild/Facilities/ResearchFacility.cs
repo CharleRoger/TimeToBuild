@@ -40,8 +40,6 @@ namespace TimeToBuild.Facilities
                 RDController.Instance.partList.Refresh();
             }
 
-            var rdTech = GetMember<RDTech>(protoTechNode, "tech");
-
             SpawnResearchCompleteDialog(techID);
         }
 
