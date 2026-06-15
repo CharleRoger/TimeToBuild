@@ -23,6 +23,7 @@ namespace TimeToBuild.Utils
         public static readonly string ReusedPart = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_ReusedPart");
         public static readonly string ReusedParts = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_ReusedParts");
         public static readonly string CurrentTime = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_CurrentTime");
+        public static readonly string CompletionTime = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_CompletionTime");
         public static readonly string LaunchTimeEarliest = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_LaunchTimeEarliest");
         public static readonly string LaunchTimeNextMorning = Localizer.Format("#LOC_TimeToBuild_Dialog_Info_LaunchTimeNextMorning");
         public static readonly string StartBuild = Localizer.Format("#LOC_TimeToBuild_Dialog_Button_StartBuild");

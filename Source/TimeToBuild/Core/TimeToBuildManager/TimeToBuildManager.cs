@@ -92,14 +92,11 @@ namespace TimeToBuild.Core
         }
 
         // List of tuples instead of dictionary in case of duplicate times or names
-        public IOrderedEnumerable<Tuple<double, string>> GetSalientDates(double endTime)
+        public IOrderedEnumerable<Tuple<double, string>> GetSalientDates(double completionTime)
         {
-            endTime += Profile.AlarmWarningBufferTime;
+            var endTime = completionTime + Profile.AlarmWarningBufferTime;
 
-            var salientDates = new List<Tuple<double, string>>{ new Tuple<double, string>(CurrentTime, LocalizerCache.CurrentTime) };
-
-            if (LaunchScheduler.LaunchTimeEarliest > 0 && LaunchScheduler.LaunchTimeEarliest < endTime) salientDates.Add(new Tuple<double, string>(LaunchScheduler.LaunchTimeEarliest, LocalizerCache.LaunchTimeEarliest));
-            if (LaunchScheduler.LaunchTimeNextMorning > 0 && LaunchScheduler.LaunchTimeNextMorning < endTime) salientDates.Add(new Tuple<double, string>(LaunchScheduler.LaunchTimeNextMorning, LocalizerCache.LaunchTimeNextMorning));
+            var salientDates = new List<Tuple<double, string>>();
 
             if (!(AlarmClockScenario.Instance is null))
             {

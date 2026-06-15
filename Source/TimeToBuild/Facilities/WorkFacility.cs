@@ -5,6 +5,7 @@ using TimeToBuild.Utils;
 using static TimeToBuild.Utils.MiscUtils;
 using TimeToBuild.Work;
 using UnityEngine;
+using static DatabaseLoaderModel_DAE;
 
 namespace TimeToBuild.Facilities
 {
@@ -97,6 +98,13 @@ namespace TimeToBuild.Facilities
             CompletionTime = CurrentTime + workDuration;
         }
 
+        private string GetEventString(double time, string title, bool bold)
+        {
+            var str = TimeToBuildManager.Instance.Calendar.GetDateString(time) + " — " + title;
+            if (bold) str = "<b>" + str + "</b>";
+            return str + "\n";
+        }
+
         public void SpawnStartWorkDialog()
         {
             var workChunkData = GetWorkChunkData();
@@ -124,8 +132,9 @@ namespace TimeToBuild.Facilities
 
             SetTotalWorkDuration(totalWorkDuration);
 
-            var message = "";
-            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(CompletionTime)) message += TimeToBuildManager.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            var message = GetEventString(CurrentTime, LocalizerCache.CurrentTime, true);
+            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(CompletionTime)) message += GetEventString(date.Item1, date.Item2, false);
+            message += GetEventString(CompletionTime, LocalizerCache.CompletionTime, true);
 
             SpawnMultiOptionDialog(title, message, GetStartWorkDialogButtons());
         }
