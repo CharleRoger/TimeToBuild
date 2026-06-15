@@ -6,7 +6,7 @@ namespace TimeToBuild
     {
         public double LaunchTime { get; private set; } = -1;
         public double LaunchTimeEarliest = -1;
-        public double LaunchTimeNextMorning => Math.Ceiling((LaunchTimeEarliest - TimeToBuild.Instance.Profile.MorningTime) / TimeToBuild.Instance.Calendar.Day) * TimeToBuild.Instance.Calendar.Day + TimeToBuild.Instance.Profile.MorningTime;
+        public double LaunchTimeNextMorning => Math.Ceiling((LaunchTimeEarliest - TimeToBuildManager.Instance.Profile.MorningTime) / TimeToBuildManager.Instance.Calendar.Day) * TimeToBuildManager.Instance.Calendar.Day + TimeToBuildManager.Instance.Profile.MorningTime;
         public bool LaunchScheduled => LaunchTime > 0;
 
         public void ScheduleLaunch(double launchTime, string vesselName)
@@ -23,7 +23,7 @@ namespace TimeToBuild
 
         public void ResetTime()
         {
-            HighLogic.CurrentGame.flightState.universalTime = TimeToBuild.Instance.Scenario.EditorStartTime;
+            HighLogic.CurrentGame.flightState.universalTime = TimeToBuildManager.Instance.Scenario.EditorStartTime;
             UnscheduleLaunch();
         }
 

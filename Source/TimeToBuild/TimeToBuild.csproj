@@ -31,8 +31,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Core\TimeToBuild\TimeToBuildSpaceCentre.cs" />
-    <Compile Include="Core\TimeToBuild\TimeToBuildEditor.cs" />
+    <Compile Include="Core\TimeToBuildManager\TimeToBuildManagerSpaceCentre.cs" />
+    <Compile Include="Core\TimeToBuildManager\TimeToBuildManagerEditor.cs" />
     <Compile Include="Facilities\ResearchFacility.cs" />
     <Compile Include="Facilities\WorkFacility.cs" />
     <Compile Include="Utils\SceneTracker.cs" />
@@ -47,7 +47,7 @@
     <Compile Include="Utils\LocalizerCache.cs" />
     <Compile Include="Core\TimeToBuildScenario.cs" />
     <Compile Include="Utils\MiscUtils.cs" />
-    <Compile Include="Core\TimeToBuild\TimeToBuild.cs" />
+    <Compile Include="Core\TimeToBuildManager\TimeToBuildManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Core\TimeToBuildProfile.cs" />
     <Compile Include="Core\TimeToBuildSettings.cs" />

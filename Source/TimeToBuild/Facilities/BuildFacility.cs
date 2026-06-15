@@ -8,7 +8,7 @@ namespace TimeToBuild
     public class BuildFacility : WorkFacility
     {
         private WorkItemVessel VesselToLaunch = null;
-        private LaunchScheduler LaunchScheduler => TimeToBuild.Instance.LaunchScheduler;
+        private LaunchScheduler LaunchScheduler => TimeToBuildManager.Instance.LaunchScheduler;
 
         public BuildFacility(SpaceCenterFacility facility) : base(facility)
         {
@@ -50,9 +50,9 @@ namespace TimeToBuild
                 shipVariables[VariableWetCost] += variables[VariableWetCost];
             }
 
-            var timeUnitVariables = TimeToBuild.Instance.Calendar.GetTimeUnitVariables();
+            var timeUnitVariables = TimeToBuildManager.Instance.Calendar.GetTimeUnitVariables();
 
-            foreach (var buildTime in TimeToBuild.Instance.Profile.BuildTimes.Values)
+            foreach (var buildTime in TimeToBuildManager.Instance.Profile.BuildTimes.Values)
             {
                 if (!UsingFacilities.Contains(buildTime.Identifier.Facility)) continue;
 
@@ -155,13 +155,13 @@ namespace TimeToBuild
 
             var workChunks = ComputeBuildWorkChunks(buildParts);
 
-            var workRates = TimeToBuild.Instance.GetWorkRates();
+            var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
             foreach (var workChunk in workChunks)
             {
-                if (!TimeToBuild.Instance.Profile.BuildTimes.ContainsKey(workChunk.Identifier)) continue;
+                if (!TimeToBuildManager.Instance.Profile.BuildTimes.ContainsKey(workChunk.Identifier)) continue;
 
-                var buildTimeConfig = TimeToBuild.Instance.Profile.BuildTimes[workChunk.Identifier];
+                var buildTimeConfig = TimeToBuildManager.Instance.Profile.BuildTimes[workChunk.Identifier];
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
@@ -171,7 +171,7 @@ namespace TimeToBuild
                     var rate = workRates[workChunk.Identifier];
                     workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
                     if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
-                    workChunkDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
+                    workChunkDatum.Duration = TimeToBuildManager.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
 
                     if (buildTimeConfig.PerNewPart) workChunkDatum.NewPartCount = numNewParts;
 
@@ -207,14 +207,14 @@ namespace TimeToBuild
                     title += ")";
                 }
 
-                title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
+                title += "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
-            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
+            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(totalBuildTime) + "\n\n";
 
             LaunchScheduler.LaunchTimeEarliest = CurrentTime + totalBuildTime;
 
             var message = "";
-            foreach (var date in TimeToBuild.Instance.GetSalientDates(LaunchScheduler.LaunchTimeNextMorning)) message += TimeToBuild.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(LaunchScheduler.LaunchTimeNextMorning)) message += TimeToBuildManager.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
             var optionStartBuild = GetBuildDialogButton(LocalizerCache.StartBuild, OnStartBuild);
             var optionWarpToEarliestLaunch = GetBuildDialogButton(LocalizerCache.WarpToEarliestLaunch, OnEditorLaunchEarliest, LaunchScheduler.LaunchTimeEarliest);

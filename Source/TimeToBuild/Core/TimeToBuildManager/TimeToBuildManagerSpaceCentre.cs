@@ -5,7 +5,7 @@ using KSP.UI.Screens;
 namespace TimeToBuild
 {
     [KSPAddon(KSPAddon.Startup.SpaceCentre, false)]
-    public class TimeToBuildSpaceCentre : TimeToBuild
+    public class TimeToBuildManagerSpaceCentre : TimeToBuildManager
     {
         bool VesselSpawnDialogIsActive => HighLogic.LoadedSceneIsGame && !(VesselSpawnDialog.Instance is null) && VesselSpawnDialog.Instance.isActiveAndEnabled;
         RDNode SelectedRDNode => HighLogic.LoadedSceneIsGame && !(RDController.Instance is null) && RDController.Instance.isActiveAndEnabled ? RDController.Instance.node_selected : null;

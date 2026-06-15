@@ -4,7 +4,7 @@ using static TimeToBuild.MiscUtils;
 namespace TimeToBuild
 {
     [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    public class TimeToBuildEditor : TimeToBuild
+    public class TimeToBuildManagerEditor : TimeToBuildManager
     {
         protected void OnSave(ConfigNode node)
         {

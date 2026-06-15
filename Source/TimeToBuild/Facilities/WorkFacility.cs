@@ -55,11 +55,11 @@ namespace TimeToBuild
 
         public IEnumerator UpdateWorkLoads_Coroutine()
         {
-            while (TimeToBuild.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
+            while (TimeToBuildManager.Instance is null || HighLogic.LoadedSceneIsEditor) yield return new WaitForFixedUpdate();
 
             while (true)
             {
-                var workRates = TimeToBuild.Instance.GetWorkRates();
+                var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
                 for (int workLoadIndex = 0; workLoadIndex < WorkLoads.Count; workLoadIndex++)
                 {

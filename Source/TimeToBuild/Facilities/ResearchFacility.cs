@@ -55,10 +55,10 @@ namespace TimeToBuild.Facilities
 
             if (UsingFacilities.Count == 0) return workChunks;
 
-            var constants = TimeToBuild.Instance.Calendar.GetTimeUnitVariables();
+            var constants = TimeToBuildManager.Instance.Calendar.GetTimeUnitVariables();
             constants["cost"] = TechNodeToResearch.scienceCost;
 
-            foreach (var researchTime in TimeToBuild.Instance.Profile.ResearchTimes.Values)
+            foreach (var researchTime in TimeToBuildManager.Instance.Profile.ResearchTimes.Values)
             {
                 if (!UsingFacilities.Contains(researchTime.Identifier.Facility)) continue;
 
@@ -81,13 +81,13 @@ namespace TimeToBuild.Facilities
 
             var workChunks = ComputeResearchWorkChunks();
 
-            var workRates = TimeToBuild.Instance.GetWorkRates();
+            var workRates = TimeToBuildManager.Instance.GetWorkRates();
 
             foreach (var workChunk in workChunks)
             {
-                if (!TimeToBuild.Instance.Profile.ResearchTimes.ContainsKey(workChunk.Identifier)) continue;
+                if (!TimeToBuildManager.Instance.Profile.ResearchTimes.ContainsKey(workChunk.Identifier)) continue;
 
-                var researchTimeConfig = TimeToBuild.Instance.Profile.ResearchTimes[workChunk.Identifier];
+                var researchTimeConfig = TimeToBuildManager.Instance.Profile.ResearchTimes[workChunk.Identifier];
 
                 if (workChunk.Work > 0 || workChunk.Overhead > 0)
                 {
@@ -97,7 +97,7 @@ namespace TimeToBuild.Facilities
                     var rate = workRates[workChunk.Identifier];
                     workChunkDatum.Duration = Convert.ToInt32(Math.Ceiling(workChunk.Work / rate + workChunk.Overhead));
                     if (workChunkDatum.Duration < 0) workChunkDatum.Duration = 0;
-                    workChunkDatum.Duration = TimeToBuild.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
+                    workChunkDatum.Duration = TimeToBuildManager.Instance.Calendar.RoundDuration(workChunkDatum.Duration);
 
                     workChunkData.Add(workChunkDatum);
                 }
@@ -122,14 +122,14 @@ namespace TimeToBuild.Facilities
 
                 totalResearchime += workChunkDatum.Duration;
 
-                title += "\n" + TimeToBuild.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
+                title += "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(workChunkDatum.Duration) + "\n\n";
             }
-            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuild.Instance.Calendar.GetDurationString(totalResearchime) + "\n\n";
+            if (workChunkData.Count > 1) title += LocalizerCache.Total + "\n" + TimeToBuildManager.Instance.Calendar.GetDurationString(totalResearchime) + "\n\n";
 
             var completionDate = CurrentTime + totalResearchime;
 
             var message = "";
-            foreach (var date in TimeToBuild.Instance.GetSalientDates(completionDate)) message += TimeToBuild.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
+            foreach (var date in TimeToBuildManager.Instance.GetSalientDates(completionDate)) message += TimeToBuildManager.Instance.Calendar.GetDateString(date.Item1) + " — " + date.Item2 + "\n";
 
             var optionStartResearch = GetBuildDialogButton(LocalizerCache.StartResearch, OnStartResearch);
 

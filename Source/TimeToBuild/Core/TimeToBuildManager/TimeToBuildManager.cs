@@ -8,9 +8,9 @@ using static TimeToBuild.MiscUtils;
 
 namespace TimeToBuild
 {
-    public abstract class TimeToBuild : MonoBehaviour
+    public abstract class TimeToBuildManager : MonoBehaviour
     {
-        public static TimeToBuild Instance = null;
+        public static TimeToBuildManager Instance = null;
         public TimeToBuildProfile Profile { get; private set; }
         public TimeToBuildScenario Scenario { get; private set; }
         public Calendar Calendar { get; private set; }
