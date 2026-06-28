@@ -32,7 +32,7 @@ Tech tree node research also takes time to progress, with similar popup dialogs 
 
 The default configuration defines three periods of time to take a vessel from parts, assumed to have already been designed and fabricated elsewhere, to launch:
 
-- **Development**: Represents time taken to test new parts and design vessels and processes, derived from the cost of individual parts. Development time decreases a bit as the VAB or SPH is upgraded, but is generally high for new and/or expensive parts and rapidly approaches zero as parts are repeatedly rebuilt, regardless of the design of the actual vessel itself. Recovered and reused parts have zero development time.
+- **Development**: Represents time taken to test new parts and design vessels and processes, derived from the cost of individual parts. Development time decreases a bit as the R&D building is upgraded, but is generally high for new and/or expensive parts and rapidly approaches zero as parts are repeatedly rebuilt, regardless of the design of the actual vessel itself. Recovered and reused parts have zero development time.
 - **Assembly**: Represents time taken to assemble the final vessel once the development is completed, largely based on the dry mass of individual new parts combined with a small contribution from cost. Assembly time decreases significantly as the relevant assembly building is upgraded. Recovered and reused parts have zero assembly time.
 - **Refurbishment**: Represents time taken to refurbish recovered and reused parts, currently set to one sixth of the assembly time.
 - **Rollout**: Represents time taken to physically move the vessel to the launch facility and prepare it for launch. This is dependent on the wet mass of the vessel at launch.

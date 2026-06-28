@@ -1,3 +1,5 @@
+# 0.3.1
+- Changed Development time for vessels to base its rate calculation on the level of the R&D facility rather than the VAB or SPH.
 # 0.3.0
 - Changed `BuildTime` formulae to be configured as a single `TimeFormula` node with three fields: `Work`, `Rate` and `Overhead`.
 - Added the ability to define `ResearchTime` nodes in a `TimeToBuildProfile` which control time taken to unlock tech tree nodes.
