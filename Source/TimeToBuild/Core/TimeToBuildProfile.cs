@@ -12,6 +12,7 @@ namespace TimeToBuild.Core
         public string Description { get; private set; } = "";
         public double MorningTime { get; private set; } = 0;
         public double AlarmWarningBufferTime { get; private set; } = 0;
+        public List<string> DryResources { get; private set; } = new List<string>();
         public Dictionary<WorkTimeIdentifier, BuildTime> BuildTimes { get; private set; } = new Dictionary<WorkTimeIdentifier, BuildTime>();
         public Dictionary<WorkTimeIdentifier, ResearchTime> ResearchTimes { get; private set; } = new Dictionary<WorkTimeIdentifier, ResearchTime>();
 
@@ -22,6 +23,14 @@ namespace TimeToBuild.Core
             if (node.HasValue("description")) Description = node.GetValue("description");
             if (node.HasValue("MorningTime")) MorningTime = double.Parse(node.GetValue("MorningTime"));
             if (node.HasValue("AlarmWarningBufferTime")) MorningTime = double.Parse(node.GetValue("AlarmWarningBufferTime"));
+
+            foreach (var dryResourcesNode in node.GetNodes("DryResources"))
+            {
+                foreach (var resourceName in dryResourcesNode.GetValues("ResourceName"))
+                {
+                    DryResources.Add(resourceName);
+                }
+            }
 
             foreach (var buildTimeNode in node.GetNodes("BuildTime"))
             {

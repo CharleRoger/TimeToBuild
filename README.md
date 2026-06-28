@@ -37,7 +37,7 @@ The default configuration defines three periods of time to take a vessel from pa
 - **Refurbishment**: Represents time taken to refurbish recovered and reused parts, currently set to one sixth of the assembly time.
 - **Rollout**: Represents time taken to physically move the vessel to the launch facility and prepare it for launch. This is dependent on the wet mass of the vessel at launch.
 
-Custom configurations can be described via a `TimeToBuildConfig` node with any number of `BuildTime` and `ResearchTime` nodes as well as the following fields:
+Custom configurations can be described via a `TimeToBuildConfig` node with any number of `BuildTime`, `ResearchTime` and `DryResources` nodes as well as the following fields:
 - `MorningTime` in seconds, for warp-to-launch-next-morning functionality.
 - `AlarmWarningBufferTime` in seconds, for listing alarms in the in-game TimeToBuild dialog which are set after the completion time, but within the specified buffer period.
 
@@ -58,6 +58,8 @@ Each `BuildTime` and `ResearchTime` node must define one `TimeFormula` node whic
     - Whole-vessel properties (`BuildTime` only): `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`, `num_parts`.
     - Individual part properties (`BuildTime` only): `num_builds` (tracked by ScrapYard), `dry_cost`, `dry_mass`, `wet_mass`, `wet_cost`.
 	- Tech tree node properties (`ResearchTime` only): `cost`.
+
+A `DryResources` node can define any number of `ResourceName` fields to specify resources which contribute to the `dry_mass` of a vessel or part in the time formulae described above.
 
 ### Planned features
 

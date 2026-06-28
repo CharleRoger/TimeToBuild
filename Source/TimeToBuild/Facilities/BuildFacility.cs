@@ -150,10 +150,25 @@ namespace TimeToBuild.Facilities
                     }
 
                     buildPart.DryMass = part.mass;
-                    buildPart.WetMass = part.mass + part.GetResourceMass();
+                    buildPart.WetMass = part.mass;
                     buildPart.DryCost = part.partInfo.cost;
                     buildPart.WetCost = part.partInfo.cost;
-                    foreach (var resource in part.Resources) buildPart.WetCost += resource.amount * PartResourceLibrary.Instance.GetDefinition(resource.resourceName).unitCost;
+                    foreach (var resource in part.Resources)
+                    {
+                        var resourceDefinition = PartResourceLibrary.Instance.GetDefinition(resource.resourceName);
+                        var resourceMass = resource.amount * resourceDefinition.density;
+                        var resourceCost = resource.amount * resourceDefinition.unitCost;
+
+                        if (TimeToBuildManager.Instance.Profile.DryResources.Contains(resource.resourceName))
+                        {
+                            buildPart.DryMass += resourceMass;
+                            buildPart.DryCost += resourceCost;
+                        }
+
+                        buildPart.WetMass += resourceMass;
+                        buildPart.WetCost += resourceCost;
+                    }
+
                     buildPart.NumBuilds = ScrapYardUseTracker ? ScrapYard.ScrapYard.Instance.PartTracker.GetBuildsForPart(part, ScrapYard.PartTracker.TrackType.NEW) : 0;
 
                     buildParts.Add(buildPart);
